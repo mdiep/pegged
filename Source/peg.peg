@@ -1,0 +1,68 @@
+
+# Grammar for PEGs, based on the one presented in Ford's paper [1]. Modifications based on those 
+# included in Ian Piumarta's peg/leg parser generator [2].
+# 
+# [1] Bryan Ford.  "Parsing Expression Grammars: A Recognition-Based Syntactic
+#     Foundation."  Symposium on Principles of Programming Languages,
+#     January 14--16, 2004, Venice, Italy.
+# 
+# [2] http://piumarta.com/software/peg/
+# 
+
+# Hierarchical syntax
+Grammar <- Spacing Definition+ EndOfFile
+Definition <- Identifier LEFTARROW Expression { [self.compiler parsedRule:text]; }
+
+Expression <- Sequence (SLASH Sequence { [self.compiler parsedAlternate]; })*
+Sequence   <- Prefix? (Prefix { [self.compiler append]; })*
+Prefix     <- AND Suffix { [self.compiler parsedLookAhead]; }
+            / NOT Suffix { [self.compiler parsedNegativeLookAhead]; }
+            /     Suffix
+Suffix     <- Primary ( QUESTION    { [self.compiler parsedQuestion]; }
+                      / STAR        { [self.compiler parsedStar]; }
+                      / PLUS        { [self.compiler parsedPlus]; }
+                      )?
+Primary    <- Identifier !LEFTARROW { [self.compiler parsedIdentifier:text]; }
+            / OPEN Expression CLOSE
+            / Literal   { [self.compiler parsedLiteral:text]; }
+            / Class     { [self.compiler parsedClass:text]; }
+            / DOT       { [self.compiler parsedDot]; }
+            / Action    { [self.compiler parsedAction:text]; }
+            / BEGIN     { [self.compiler beginCapture]; }
+            / END       { [self.compiler endCapture]; }
+
+# Lexical syntax
+Identifier <- < IdentStart IdentCont* > Spacing
+IdentStart <- [a-zA-Z_]
+IdentCont  <- IdentStart / [0-9]
+
+Literal    <- ['] < (!['] Char)*  > ['] Spacing
+            / ["] < (!["] Char)*  > ["] Spacing
+Class      <- '[' < (!']' Range)* > ']' Spacing
+Range      <- Char '-' Char / Char
+Char       <- '\\' [nrt'"\[\]\\]
+            / '\\' [0-2][0-7][0-7]
+            / '\\' [0-7][0-7]?
+            / !'\\' .
+
+LEFTARROW  <- '<-' Spacing
+SLASH      <- '/' Spacing
+AND        <- '&' Spacing
+NOT        <- '!' Spacing
+QUESTION   <- '?' Spacing
+STAR       <- '*' Spacing
+PLUS       <- '+' Spacing
+OPEN       <- '(' Spacing
+CLOSE      <- ')' Spacing
+DOT        <- '.' Spacing
+
+Spacing    <- (Space / Comment)*
+Comment    <- '#' (!EndOfLine .)* EndOfLine
+Space      <- ' ' / '\t' / EndOfLine
+EndOfLine  <- '\r\n' / '\n' / '\r'
+EndOfFile  <- !.
+
+BEGIN      <- '<' Spacing
+END        <- '>' Spacing
+
+Action     <- '{' < [^}]* > '}' Spacing
