@@ -232,6 +232,7 @@ static int yyText(int begin, int end)
     for (pos= 0;  pos < yythunkpos;  ++pos)
     {
         yythunk *thunk= &yythunks[pos];
+        yyText(thunk->begin, thunk->end);
         yyprintf((stderr, "DO [%d] %p %s\n", pos, thunk->action, yytext));
         [self performSelector:thunk->action withObject:[NSString stringWithUTF8String:yytext]];
     }
