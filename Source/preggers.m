@@ -18,8 +18,10 @@ int main (int argc, const char * argv[])
     
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     
-    NSString *curDir = [[NSFileManager defaultManager] currentDirectoryPath];
-    NSString *path = [curDir stringByAppendingPathComponent:[NSString stringWithUTF8String:argv[1]]];
+    NSString *path = [NSString stringWithUTF8String:argv[1]];
+    if (![path isAbsolutePath])
+        path = [[[NSFileManager defaultManager]
+                 currentDirectoryPath] stringByAppendingPathComponent:path];
     NSError *error = nil;
     NSString *string = [NSString stringWithContentsOfURL:[NSURL fileURLWithPath:path]
                                                 encoding:NSUTF8StringEncoding
