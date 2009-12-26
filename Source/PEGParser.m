@@ -82,30 +82,6 @@
 # define yyprintf(args)
 #endif
 
-#ifndef YYSTYPE
-#define YYSTYPE	int
-#endif
-
-#ifndef matchPART
-
-typedef struct _yythunk { int begin, end;  SEL  action;  struct _yythunk *next; } yythunk;
-
-static char *   yybuf= 0;
-static int      yybuflen= 0;
-static int	    yypos= 0;
-static int	    yylimit= 0;
-static char *   yytext= 0;
-static int	    yytextlen= 0;
-static int	    yybegin= 0;
-static int	    yyend= 0;
-static yythunk *yythunks= 0;
-static int	    yythunkslen= 0;
-static int      yythunkpos= 0;
-static YYSTYPE  yy;
-static YYSTYPE *yyval= 0;
-static YYSTYPE *yyvals= 0;
-static int      yyvalslen= 0;
-
 - (BOOL) _refill
 {
     int yyn;
@@ -208,7 +184,7 @@ static int      yyvalslen= 0;
     ++yythunkpos;
 }
 
-static int yyText(int begin, int end)
+- (int) yyText:(int)begin to:(int)end
 {
     int yyleng= end - begin;
     if (yyleng <= 0)
@@ -232,14 +208,14 @@ static int yyText(int begin, int end)
     for (pos= 0;  pos < yythunkpos;  ++pos)
     {
         yythunk *thunk= &yythunks[pos];
-        yyText(thunk->begin, thunk->end);
+        [self yyText:thunk->begin to:thunk->end];
         yyprintf((stderr, "DO [%d] %p %s\n", pos, thunk->action, yytext));
         [self performSelector:thunk->action withObject:[NSString stringWithUTF8String:yytext]];
     }
     yythunkpos= 0;
 }
 
-static void yyCommit()
+- (void) yyCommit
 {
     if ((yylimit -= yypos))
     {
@@ -260,16 +236,10 @@ static void yyCommit()
     else
     {
         [self yyDone];
-        yyCommit();
+        [self yyCommit];
     }
     return YES;
 }
-
-static void yyPush(char *text, int count)	{ yyval += count; }
-static void yyPop(char *text, int count)	{ yyval -= count; }
-static void yySet(char *text, int count)	{ yyval[count]= yy; }
-
-#endif /* matchPART */
 
 #define	YYACCEPT	[self yyAccept:yythunkpos0]
 
@@ -493,11 +463,11 @@ l29:;	  yypos= yypos0; yythunkpos= yythunkpos0;
 
 - (BOOL) matchAction
 {  int yypos0= yypos, yythunkpos0= yythunkpos;
-    yyprintf((stderr, "%s\n", "Action"));  if (![self _matchChar:'{']) goto l30;  yyText(yybegin, yyend);  if (!(YY_BEGIN)) goto l30;
+    yyprintf((stderr, "%s\n", "Action"));  if (![self _matchChar:'{']) goto l30;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l30;
 l31:;	
     {  int yypos32= yypos, yythunkpos32= yythunkpos;  if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\337\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto l32;  goto l31;
     l32:;	  yypos= yypos32; yythunkpos= yythunkpos32;
-    }  yyText(yybegin, yyend);  if (!(YY_END)) goto l30;  if (![self _matchChar:'}']) goto l30;  if (![self matchSpacing]) goto l30;
+    }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l30;  if (![self _matchChar:'}']) goto l30;  if (![self matchSpacing]) goto l30;
     yyprintf((stderr, "  ok   %s @ %s\n", "Action", yybuf+yypos));
     return YES;
 l30:;	  yypos= yypos0; yythunkpos= yythunkpos0;
@@ -517,14 +487,14 @@ l33:;	  yypos= yypos0; yythunkpos= yythunkpos0;
 
 - (BOOL) matchClass
 {  int yypos0= yypos, yythunkpos0= yythunkpos;
-    yyprintf((stderr, "%s\n", "Class"));  if (![self _matchChar:'[']) goto l34;  yyText(yybegin, yyend);  if (!(YY_BEGIN)) goto l34;
+    yyprintf((stderr, "%s\n", "Class"));  if (![self _matchChar:'[']) goto l34;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l34;
 l35:;	
     {  int yypos36= yypos, yythunkpos36= yythunkpos;
         {  int yypos37= yypos, yythunkpos37= yythunkpos;  if (![self _matchChar:']']) goto l37;  goto l36;
         l37:;	  yypos= yypos37; yythunkpos= yythunkpos37;
         }  if (![self matchRange]) goto l36;  goto l35;
     l36:;	  yypos= yypos36; yythunkpos= yythunkpos36;
-    }  yyText(yybegin, yyend);  if (!(YY_END)) goto l34;  if (![self _matchChar:']']) goto l34;  if (![self matchSpacing]) goto l34;
+    }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l34;  if (![self _matchChar:']']) goto l34;  if (![self matchSpacing]) goto l34;
     yyprintf((stderr, "  ok   %s @ %s\n", "Class", yybuf+yypos));
     return YES;
 l34:;	  yypos= yypos0; yythunkpos= yythunkpos0;
@@ -535,22 +505,22 @@ l34:;	  yypos= yypos0; yythunkpos= yythunkpos0;
 - (BOOL) matchLiteral
 {  int yypos0= yypos, yythunkpos0= yythunkpos;
     yyprintf((stderr, "%s\n", "Literal"));
-    {  int yypos39= yypos, yythunkpos39= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  yyText(yybegin, yyend);  if (!(YY_BEGIN)) goto l40;
+    {  int yypos39= yypos, yythunkpos39= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l40;
     l41:;	
         {  int yypos42= yypos, yythunkpos42= yythunkpos;
             {  int yypos43= yypos, yythunkpos43= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l43;  goto l42;
             l43:;	  yypos= yypos43; yythunkpos= yythunkpos43;
             }  if (![self matchChar]) goto l42;  goto l41;
         l42:;	  yypos= yypos42; yythunkpos= yythunkpos42;
-        }  yyText(yybegin, yyend);  if (!(YY_END)) goto l40;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  if (![self matchSpacing]) goto l40;  goto l39;
-    l40:;	  yypos= yypos39; yythunkpos= yythunkpos39;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  yyText(yybegin, yyend);  if (!(YY_BEGIN)) goto l38;
+        }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l40;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  if (![self matchSpacing]) goto l40;  goto l39;
+    l40:;	  yypos= yypos39; yythunkpos= yythunkpos39;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l38;
     l44:;	
         {  int yypos45= yypos, yythunkpos45= yythunkpos;
             {  int yypos46= yypos, yythunkpos46= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l46;  goto l45;
             l46:;	  yypos= yypos46; yythunkpos= yythunkpos46;
             }  if (![self matchChar]) goto l45;  goto l44;
         l45:;	  yypos= yypos45; yythunkpos= yythunkpos45;
-        }  yyText(yybegin, yyend);  if (!(YY_END)) goto l38;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  if (![self matchSpacing]) goto l38;
+        }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l38;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  if (![self matchSpacing]) goto l38;
     }
 l39:;	
     yyprintf((stderr, "  ok   %s @ %s\n", "Literal", yybuf+yypos));
@@ -742,11 +712,11 @@ l83:;	  yypos= yypos0; yythunkpos= yythunkpos0;
 
 - (BOOL) matchIdentifier
 {  int yypos0= yypos, yythunkpos0= yythunkpos;
-    yyprintf((stderr, "%s\n", "Identifier"));  yyText(yybegin, yyend);  if (!(YY_BEGIN)) goto l84;  if (![self matchIdentStart]) goto l84;
+    yyprintf((stderr, "%s\n", "Identifier"));  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l84;  if (![self matchIdentStart]) goto l84;
 l85:;	
     {  int yypos86= yypos, yythunkpos86= yythunkpos;  if (![self matchIdentCont]) goto l86;  goto l85;
     l86:;	  yypos= yypos86; yythunkpos= yythunkpos86;
-    }  yyText(yybegin, yyend);  if (!(YY_END)) goto l84;  if (![self matchSpacing]) goto l84;
+    }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l84;  if (![self matchSpacing]) goto l84;
     yyprintf((stderr, "  ok   %s @ %s\n", "Identifier", yybuf+yypos));
     return YES;
 l84:;	  yypos= yypos0; yythunkpos= yythunkpos0;
@@ -818,13 +788,10 @@ l95:;	  yypos= yypos0; yythunkpos= yythunkpos0;
         yytext= malloc(yytextlen);
         yythunkslen= 32;
         yythunks= malloc(sizeof(yythunk) * yythunkslen);
-        yyvalslen= 32;
-        yyvals= malloc(sizeof(YYSTYPE) * yyvalslen);
         yybegin= yyend= yypos= yylimit= yythunkpos= 0;
     }
     yybegin= yyend= yypos;
     yythunkpos= 0;
-    yyval= yyvals;
     
     NSMethodSignature *sig = [[self class] instanceMethodSignatureForSelector:startRule];
     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:sig];
@@ -833,7 +800,7 @@ l95:;	  yypos= yypos0; yythunkpos= yythunkpos0;
     [invocation invoke];
     [invocation getReturnValue:&yyok];
     if (yyok) [self yyDone];
-    yyCommit();
+    [self yyCommit];
     return yyok;
 }
 
@@ -850,6 +817,10 @@ l95:;	  yypos= yypos0; yythunkpos= yythunkpos0;
 
 - (void) dealloc
 {
+    free(yybuf);
+    free(yytext);
+    free(yythunks);
+    
     [_string release];
     
     [super dealloc];

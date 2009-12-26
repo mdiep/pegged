@@ -15,12 +15,25 @@
 @protocol PEGParserDataSource;
 typedef NSObject<PEGParserDataSource> PEGParserDataSource;
 
+typedef struct _yythunk { int begin, end;  SEL action;  struct _yythunk *next; } yythunk;
 
 @interface PEGParser : NSObject
 {
     PEGParserDataSource *_dataSource;
     NSString *_string;
     NSUInteger _loc;
+    
+    char *yybuf;
+    int yybuflen;
+    int	yypos;
+    int	yylimit;
+    char * yytext;
+    int	yytextlen;
+    int	yybegin;
+    int	yyend;
+    yythunk *yythunks;
+    int	yythunkslen;
+    int yythunkpos;
     
     Compiler *_compiler;
 }
