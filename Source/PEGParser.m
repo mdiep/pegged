@@ -164,23 +164,19 @@
     ++yythunkpos;
 }
 
-- (int) yyText:(int)begin to:(int)end
+- (void) yyText:(int)begin to:(int)end
 {
     int len = end - begin;
     if (len <= 0)
-        len = 0;
+    {
+        [_text release];
+        _text = nil;
+    }
     else
     {
-        NSString *text = [_string substringWithRange:NSMakeRange(begin, end-begin+1)];
-        while (yytextlen < (len - 1))
-        {
-            yytextlen *= 2;
-            yytext= realloc(yytext, yytextlen);
-        }
-        memcpy(yytext, [text UTF8String], len);
+        _text = [_string substringWithRange:NSMakeRange(begin, end-begin)];
+        [_text retain];
     }
-    yytext[len]= '\0';
-    return len;
 }
 
 - (void) yyDone
@@ -191,7 +187,7 @@
         yythunk *thunk= &yythunks[pos];
         [self yyText:thunk->begin to:thunk->end];
         yyprintf((stderr, "DO [%d] %s %s\n", pos, [NSStringFromSelector(thunk->action) UTF8String], yytext));
-        [self performSelector:thunk->action withObject:[NSString stringWithUTF8String:yytext]];
+        [self performSelector:thunk->action withObject:_text];
     }
     yythunkpos= 0;
 }
@@ -748,10 +744,8 @@ l95:;	  _index= index0; yythunkpos= yythunkpos0;
 - (BOOL) yyparsefrom:(SEL)startRule
 {
     BOOL yyok;
-    if (!yytextlen)
+    if (!yythunkslen)
     {
-        yytextlen= 1024;
-        yytext= malloc(yytextlen);
         yythunkslen= 32;
         yythunks= malloc(sizeof(yythunk) * yythunkslen);
         yybegin= yyend= yythunkpos= 0;
@@ -776,6 +770,8 @@ l95:;	  _index= index0; yythunkpos= yythunkpos0;
     
     [_string release];
     _string = nil;
+    [_text release];
+    _text = nil;
     
     return yyok;
 }
@@ -793,7 +789,6 @@ l95:;	  _index= index0; yythunkpos= yythunkpos0;
 
 - (void) dealloc
 {
-    free(yytext);
     free(yythunks);
     
     [_string release];

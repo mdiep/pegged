@@ -23,9 +23,8 @@ typedef struct { int begin, end;  SEL action; } yythunk;
     NSString *_string;
     NSUInteger _index;
     NSUInteger _limit;
+    NSString *_text;
     
-    char * yytext;
-    int	yytextlen;
     int	yybegin;
     int	yyend;
     yythunk *yythunks;
