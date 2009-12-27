@@ -21,12 +21,9 @@ typedef struct { int begin, end;  SEL action; } yythunk;
 {
     PEGParserDataSource *_dataSource;
     NSString *_string;
-    NSUInteger _loc;
+    NSUInteger _index;
+    NSUInteger _limit;
     
-    char *yybuf;
-    int yybuflen;
-    int	yypos;
-    int	yylimit;
     char * yytext;
     int	yytextlen;
     int	yybegin;
