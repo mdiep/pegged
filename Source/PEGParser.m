@@ -68,14 +68,6 @@
 #include <string.h>
 #define YYRULECOUNT 32
 
-#ifndef YY_BEGIN
-#define YY_BEGIN	( yybegin= _index, 1)
-#endif
-
-#ifndef YY_END
-#define YY_END		( yyend= _index, 1)
-#endif
-
 #ifdef matchDEBUG
 #define yyprintf(args)	{ fprintf args; fprintf(stderr," @ %s\n",[[_string substringFromIndex:_index] UTF8String]); }
 #else
@@ -410,11 +402,11 @@ l29:;	  _index= index0; yythunkpos= yythunkpos0;
 
 - (BOOL) matchAction
 {  int index0= _index, yythunkpos0= yythunkpos;
-    yyprintf((stderr, "%s", "Action"));  if (![self _matchChar:'{']) goto l30;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l30;
+    yyprintf((stderr, "%s", "Action"));  if (![self _matchChar:'{']) goto l30;  [self yyText:yybegin to:yyend];  yybegin= _index;
 l31:;	
     {  int index32= _index, yythunkpos32= yythunkpos;  if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\337\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto l32;  goto l31;
     l32:;	  _index= index32; yythunkpos= yythunkpos32;
-    }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l30;  if (![self _matchChar:'}']) goto l30;  if (![self matchSpacing]) goto l30;
+    }  [self yyText:yybegin to:yyend];  yyend= _index;  if (![self _matchChar:'}']) goto l30;  if (![self matchSpacing]) goto l30;
     yyprintf((stderr, "  ok   %s", "Action"));
     return YES;
 l30:;	  _index= index0; yythunkpos= yythunkpos0;
@@ -434,14 +426,14 @@ l33:;	  _index= index0; yythunkpos= yythunkpos0;
 
 - (BOOL) matchClass
 {  int index0= _index, yythunkpos0= yythunkpos;
-    yyprintf((stderr, "%s", "Class"));  if (![self _matchChar:'[']) goto l34;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l34;
+    yyprintf((stderr, "%s", "Class"));  if (![self _matchChar:'[']) goto l34;  [self yyText:yybegin to:yyend];  yybegin= _index;
 l35:;	
     {  int index36= _index, yythunkpos36= yythunkpos;
         {  int index37= _index, yythunkpos37= yythunkpos;  if (![self _matchChar:']']) goto l37;  goto l36;
         l37:;	  _index= index37; yythunkpos= yythunkpos37;
         }  if (![self matchRange]) goto l36;  goto l35;
     l36:;	  _index= index36; yythunkpos= yythunkpos36;
-    }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l34;  if (![self _matchChar:']']) goto l34;  if (![self matchSpacing]) goto l34;
+    }  [self yyText:yybegin to:yyend];  yyend= _index;  if (![self _matchChar:']']) goto l34;  if (![self matchSpacing]) goto l34;
     yyprintf((stderr, "  ok   %s", "Class"));
     return YES;
 l34:;	  _index= index0; yythunkpos= yythunkpos0;
@@ -452,22 +444,22 @@ l34:;	  _index= index0; yythunkpos= yythunkpos0;
 - (BOOL) matchLiteral
 {  int index0= _index, yythunkpos0= yythunkpos;
     yyprintf((stderr, "%s", "Literal"));
-    {  int index39= _index, yythunkpos39= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l40;
+    {  int index39= _index, yythunkpos39= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  [self yyText:yybegin to:yyend];  yybegin= _index;
     l41:;	
         {  int index42= _index, yythunkpos42= yythunkpos;
             {  int index43= _index, yythunkpos43= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l43;  goto l42;
             l43:;	  _index= index43; yythunkpos= yythunkpos43;
             }  if (![self matchChar]) goto l42;  goto l41;
         l42:;	  _index= index42; yythunkpos= yythunkpos42;
-        }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l40;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  if (![self matchSpacing]) goto l40;  goto l39;
-    l40:;	  _index= index39; yythunkpos= yythunkpos39;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l38;
+        }  [self yyText:yybegin to:yyend];  yyend= _index;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l40;  if (![self matchSpacing]) goto l40;  goto l39;
+    l40:;	  _index= index39; yythunkpos= yythunkpos39;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  [self yyText:yybegin to:yyend];  yybegin= _index;
     l44:;	
         {  int index45= _index, yythunkpos45= yythunkpos;
             {  int index46= _index, yythunkpos46= yythunkpos;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l46;  goto l45;
             l46:;	  _index= index46; yythunkpos= yythunkpos46;
             }  if (![self matchChar]) goto l45;  goto l44;
         l45:;	  _index= index45; yythunkpos= yythunkpos45;
-        }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l38;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  if (![self matchSpacing]) goto l38;
+        }  [self yyText:yybegin to:yyend];  yyend= _index;  if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto l38;  if (![self matchSpacing]) goto l38;
     }
 l39:;	
     yyprintf((stderr, "  ok   %s", "Literal"));
@@ -659,11 +651,12 @@ l83:;	  _index= index0; yythunkpos= yythunkpos0;
 
 - (BOOL) matchIdentifier
 {  int index0= _index, yythunkpos0= yythunkpos;
-    yyprintf((stderr, "%s", "Identifier"));  [self yyText:yybegin to:yyend];  if (!(YY_BEGIN)) goto l84;  if (![self matchIdentStart]) goto l84;
+    yyprintf((stderr, "%s", "Identifier"));  [self yyText:yybegin to:yyend];  yybegin= _index;
+    if (![self matchIdentStart]) goto l84;
 l85:;	
     {  int index86= _index, yythunkpos86= yythunkpos;  if (![self matchIdentCont]) goto l86;  goto l85;
     l86:;	  _index= index86; yythunkpos= yythunkpos86;
-    }  [self yyText:yybegin to:yyend];  if (!(YY_END)) goto l84;  if (![self matchSpacing]) goto l84;
+    }  [self yyText:yybegin to:yyend];  yyend= _index;  if (![self matchSpacing]) goto l84;
     yyprintf((stderr, "  ok   %s", "Identifier"));
     return YES;
 l84:;	  _index= index0; yythunkpos= yythunkpos0;
