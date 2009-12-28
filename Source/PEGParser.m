@@ -205,23 +205,6 @@
     yythunkpos= 0;
 }
 
-- (BOOL) yyAccept:(int)tp0
-{
-    if (tp0)
-    {
-        fprintf(stderr, "accept denied at %d\n", tp0);
-        return NO;
-    }
-    else
-    {
-        [self yyDone];
-        [self yyCommit];
-    }
-    return YES;
-}
-
-#define	YYACCEPT	[self yyAccept:yythunkpos0]
-
 - (void) yy_7_Primary:(NSString *)text
 {
     [self.compiler endCapture]; ;
