@@ -10,6 +10,14 @@
 		8DD76F9A0486AA7600D96B5E /* preggers.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* preggers.m */; settings = {ATTRIBUTES = (); }; };
 		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		8DD76F9F0486AA7600D96B5E /* preggers.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859EA3029092ED04C91782 /* preggers.1 */; };
+		BE962FE010E97DA3007629F6 /* Rule.m in Sources */ = {isa = PBXBuildFile; fileRef = BE962FDF10E97DA3007629F6 /* Rule.m */; };
+		BE962FF110EAE33D007629F6 /* Node.m in Sources */ = {isa = PBXBuildFile; fileRef = BE962FF010EAE33D007629F6 /* Node.m */; };
+		BE96300110EAE499007629F6 /* Sequence.m in Sources */ = {isa = PBXBuildFile; fileRef = BE96300010EAE499007629F6 /* Sequence.m */; };
+		BE96300410EAE93D007629F6 /* Action.m in Sources */ = {isa = PBXBuildFile; fileRef = BE96300310EAE93D007629F6 /* Action.m */; };
+		BE96301310EAEC2D007629F6 /* Expression.m in Sources */ = {isa = PBXBuildFile; fileRef = BE96301210EAEC2D007629F6 /* Expression.m */; };
+		BE96301A10EAEE3D007629F6 /* Dot.m in Sources */ = {isa = PBXBuildFile; fileRef = BE96301910EAEE3D007629F6 /* Dot.m */; };
+		BE96301D10EAEE98007629F6 /* CClass.m in Sources */ = {isa = PBXBuildFile; fileRef = BE96301C10EAEE98007629F6 /* CClass.m */; };
+		BE96305410EB0139007629F6 /* Literal.m in Sources */ = {isa = PBXBuildFile; fileRef = BE96305310EB0139007629F6 /* Literal.m */; };
 		BECEF81910DB3CA50067BA1E /* PEGParser.m in Sources */ = {isa = PBXBuildFile; fileRef = BECEF81810DB3CA50067BA1E /* PEGParser.m */; };
 		BECEF82610DC1F4F0067BA1E /* Compiler.m in Sources */ = {isa = PBXBuildFile; fileRef = BECEF82510DC1F4F0067BA1E /* Compiler.m */; };
 /* End PBXBuildFile section */
@@ -32,6 +40,22 @@
 		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32A70AAB03705E1F00C91783 /* preggers_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = preggers_Prefix.pch; sourceTree = "<group>"; };
 		8DD76FA10486AA7600D96B5E /* preggers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = preggers; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE962FDE10E97DA3007629F6 /* Rule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Rule.h; sourceTree = "<group>"; };
+		BE962FDF10E97DA3007629F6 /* Rule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Rule.m; sourceTree = "<group>"; };
+		BE962FEF10EAE33D007629F6 /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
+		BE962FF010EAE33D007629F6 /* Node.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Node.m; sourceTree = "<group>"; };
+		BE962FFF10EAE499007629F6 /* Sequence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sequence.h; sourceTree = "<group>"; };
+		BE96300010EAE499007629F6 /* Sequence.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Sequence.m; sourceTree = "<group>"; };
+		BE96300210EAE93D007629F6 /* Action.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Action.h; sourceTree = "<group>"; };
+		BE96300310EAE93D007629F6 /* Action.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Action.m; sourceTree = "<group>"; };
+		BE96301110EAEC2D007629F6 /* Expression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Expression.h; sourceTree = "<group>"; };
+		BE96301210EAEC2D007629F6 /* Expression.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Expression.m; sourceTree = "<group>"; };
+		BE96301810EAEE3D007629F6 /* Dot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Dot.h; sourceTree = "<group>"; };
+		BE96301910EAEE3D007629F6 /* Dot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Dot.m; sourceTree = "<group>"; };
+		BE96301B10EAEE98007629F6 /* CClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CClass.h; sourceTree = "<group>"; };
+		BE96301C10EAEE98007629F6 /* CClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CClass.m; sourceTree = "<group>"; };
+		BE96305210EB0139007629F6 /* Literal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Literal.h; sourceTree = "<group>"; };
+		BE96305310EB0139007629F6 /* Literal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Literal.m; sourceTree = "<group>"; };
 		BECEF81710DB3CA50067BA1E /* PEGParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PEGParser.h; sourceTree = "<group>"; };
 		BECEF81810DB3CA50067BA1E /* PEGParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PEGParser.m; sourceTree = "<group>"; };
 		BECEF82410DC1F4F0067BA1E /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Compiler.h; sourceTree = "<group>"; };
@@ -66,13 +90,29 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				BE96300210EAE93D007629F6 /* Action.h */,
+				BE96300310EAE93D007629F6 /* Action.m */,
+				BE96301B10EAEE98007629F6 /* CClass.h */,
+				BE96301C10EAEE98007629F6 /* CClass.m */,
 				BECEF82410DC1F4F0067BA1E /* Compiler.h */,
 				BECEF82510DC1F4F0067BA1E /* Compiler.m */,
-				32A70AAB03705E1F00C91783 /* preggers_Prefix.pch */,
-				08FB7796FE84155DC02AAC07 /* preggers.m */,
+				BE96301810EAEE3D007629F6 /* Dot.h */,
+				BE96301910EAEE3D007629F6 /* Dot.m */,
+				BE96301110EAEC2D007629F6 /* Expression.h */,
+				BE96301210EAEC2D007629F6 /* Expression.m */,
+				BE96305210EB0139007629F6 /* Literal.h */,
+				BE96305310EB0139007629F6 /* Literal.m */,
+				BE962FEF10EAE33D007629F6 /* Node.h */,
+				BE962FF010EAE33D007629F6 /* Node.m */,
+				BECEF83510DC4EF00067BA1E /* peg.peg */,
 				BECEF81710DB3CA50067BA1E /* PEGParser.h */,
 				BECEF81810DB3CA50067BA1E /* PEGParser.m */,
-				BECEF83510DC4EF00067BA1E /* peg.peg */,
+				08FB7796FE84155DC02AAC07 /* preggers.m */,
+				32A70AAB03705E1F00C91783 /* preggers_Prefix.pch */,
+				BE962FDE10E97DA3007629F6 /* Rule.h */,
+				BE962FDF10E97DA3007629F6 /* Rule.m */,
+				BE962FFF10EAE499007629F6 /* Sequence.h */,
+				BE96300010EAE499007629F6 /* Sequence.m */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -147,6 +187,14 @@
 				8DD76F9A0486AA7600D96B5E /* preggers.m in Sources */,
 				BECEF81910DB3CA50067BA1E /* PEGParser.m in Sources */,
 				BECEF82610DC1F4F0067BA1E /* Compiler.m in Sources */,
+				BE962FE010E97DA3007629F6 /* Rule.m in Sources */,
+				BE962FF110EAE33D007629F6 /* Node.m in Sources */,
+				BE96300110EAE499007629F6 /* Sequence.m in Sources */,
+				BE96300410EAE93D007629F6 /* Action.m in Sources */,
+				BE96301310EAEC2D007629F6 /* Expression.m in Sources */,
+				BE96301A10EAEE3D007629F6 /* Dot.m in Sources */,
+				BE96301D10EAEE98007629F6 /* CClass.m in Sources */,
+				BE96305410EB0139007629F6 /* Literal.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

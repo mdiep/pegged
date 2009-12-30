@@ -11,7 +11,8 @@
 
 # Hierarchical syntax
 Grammar <- Spacing Definition+ EndOfFile
-Definition <- Identifier LEFTARROW Expression { [self.compiler parsedRule:text]; }
+Definition <- Identifier { [self.compiler startRule:text]; }
+                LEFTARROW Expression { [self.compiler parsedRule]; }
 
 Expression <- Sequence (SLASH Sequence { [self.compiler parsedAlternate]; })*
 Sequence   <- Prefix? (Prefix { [self.compiler append]; })*

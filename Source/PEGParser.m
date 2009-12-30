@@ -269,7 +269,12 @@
 
 - (void) yy_1_Definition:(NSString *)text
 {
-    [self.compiler parsedRule:text]; ;
+    [self.compiler startRule:text]; ;
+}
+
+- (void) yy_2_Definition:(NSString *)text
+{
+    [self.compiler parsedRule]; ;
 }
 
 - (BOOL) matchEndOfLine
@@ -679,7 +684,7 @@ l87:;	  _index= index0; yythunkpos= yythunkpos0;
 
 - (BOOL) matchDefinition
 {  int index0= _index, yythunkpos0= yythunkpos;
-    yyprintf((stderr, "%s", "Definition"));  if (![self matchIdentifier]) goto l89;  if (![self matchLEFTARROW]) goto l89;  if (![self matchExpression]) goto l89;  [self yyDo:@selector(yy_1_Definition:) from:yybegin to:yyend];
+    yyprintf((stderr, "%s", "Definition"));  if (![self matchIdentifier]) goto l89;  [self yyDo:@selector(yy_1_Definition:) from:yybegin to:yyend];  if (![self matchLEFTARROW]) goto l89;  if (![self matchExpression]) goto l89;  [self yyDo:@selector(yy_2_Definition:) from:yybegin to:yyend];
     yyprintf((stderr, "  ok   %s", "Definition"));
     return YES;
 l89:;	  _index= index0; yythunkpos= yythunkpos0;

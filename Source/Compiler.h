@@ -11,13 +11,15 @@
 
 @interface Compiler : NSObject
 {
+    NSMutableArray *_stack;
+    NSMutableDictionary *_rules;
 }
 
 - (void) append;
 - (void) beginCapture;
 - (void) endCapture;
 
-- (void) parsedAction:(NSString *)literal;
+- (void) parsedAction:(NSString *)code;
 - (void) parsedAlternate;
 - (void) parsedClass:(NSString *)class;
 - (void) parsedDot;
@@ -27,7 +29,8 @@
 - (void) parsedNegativeLookAhead;
 - (void) parsedPlus;
 - (void) parsedQuestion;
-- (void) parsedRule:(NSString *)name;
+- (void) parsedRule;
 - (void) parsedStar;
+- (void) startRule:(NSString *)name;
 
 @end
