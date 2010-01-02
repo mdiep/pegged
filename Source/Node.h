@@ -12,16 +12,13 @@
 @interface Node : NSObject
 {
     BOOL _inverted;
-    BOOL _lookAhead;
-    BOOL _optional;
-    BOOL _repeats;
 }
 
 @property (assign) BOOL inverted;
-@property (assign) BOOL lookAhead;
-@property (assign) BOOL optional;
-@property (assign) BOOL repeats;
 
 + (id) node;
+
+- (NSString *) compile:(NSString *)failLabel;
+- (void) invert;
 
 @end

@@ -8,9 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-#import "Node.h"
+#import "Terminal.h"
 
-@interface Dot : Node
+@interface Dot : Terminal
 {
 }
 

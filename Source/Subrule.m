@@ -1,26 +1,27 @@
 //
-//  Literal.m
+//  Subrule.m
 //  preggers
 //
-//  Created by Matt Diephouse on 12/29/09.
+//  Created by Matt Diephouse on 1/1/10.
 //  This code is in the public domain.
 //
 
-#import "Literal.h"
+#import "Subrule.h"
 
+#import "Rule.h"
 
-@implementation Literal
+@implementation Subrule
 
-@synthesize string = _string;
+@synthesize rule = _rule;
 
 //==================================================================================================
 #pragma mark -
-#pragma mark Public Methods
+#pragma mark NSObject Methods
 //==================================================================================================
 
 - (void) dealloc
 {
-    [_string release];
+    [_rule release];
     
     [super dealloc];
 }
@@ -33,7 +34,7 @@
 
 - (NSString *) condition
 {
-    return [NSString stringWithFormat:@"[self _matchString:\"%@\"]", self.string];
+    return [NSString stringWithFormat:@"[self %@]", self.rule.selectorName];
 }
 
 
@@ -42,19 +43,19 @@
 #pragma mark Public Methods
 //==================================================================================================
 
-+ (id) literalWithString:(NSString *)string
++ (id) subruleWithRule:(Rule *)rule
 {
-    return [[[[self class] alloc] initWithString:string] autorelease];
+    return [[[[self class] alloc] initWithRule:rule] autorelease];
 }
 
 
-- (id) initWithString:(NSString *)string
+- (id) initWithRule:(Rule *)rule
 {
     self = [super init];
     
     if (self)
     {
-        _string = [string copy];
+        _rule = [rule retain];
     }
     
     return self;

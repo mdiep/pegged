@@ -32,10 +32,20 @@ int main (int argc, const char * argv[])
         NSLog(@"> %@", [error localizedDescription]);
         return 1;
     }
-    PEGParser *parser = [PEGParser new];
-    parser.compiler   = [Compiler new];
+    Compiler  *compiler = [Compiler new];
+    PEGParser *parser   = [PEGParser new];
+    parser.compiler = compiler;
     BOOL retval = [parser parseString:string];
     [parser release];
+    if (retval)
+    {
+        NSString *fileWithoutExtension = [path stringByDeletingPathExtension];
+        compiler.className  = [fileWithoutExtension lastPathComponent];
+        compiler.headerPath = [fileWithoutExtension stringByAppendingPathExtension:@"h"];
+        compiler.sourcePath = [fileWithoutExtension stringByAppendingPathExtension:@"m"];
+        [compiler compile];
+    }
+    [compiler release];
 
     [pool drain];
     return !retval;

@@ -8,12 +8,28 @@
 
 #import <Foundation/Foundation.h>
 
+@class Rule;
 
 @interface Compiler : NSObject
 {
     NSMutableArray *_stack;
     NSMutableDictionary *_rules;
+    NSMutableArray *_actions;
+    Rule *_startRule;
+    Rule *_currentRule;
+    
+    NSString *_className;
+    NSString *_headerPath;
+    NSString *_sourcePath;
 }
+
+@property (copy) NSString *className;
+@property (copy) NSString *headerPath;
+@property (copy) NSString *sourcePath;
+
++ (NSString *) unique:(NSString *)identifier;
+
+- (void) compile;
 
 - (void) append;
 - (void) beginCapture;

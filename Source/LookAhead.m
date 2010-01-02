@@ -1,39 +1,48 @@
 //
-//  Literal.m
+//  LookAhead.m
 //  preggers
 //
-//  Created by Matt Diephouse on 12/29/09.
+//  Created by Matt Diephouse on 1/1/10.
 //  This code is in the public domain.
 //
 
-#import "Literal.h"
+#import "LookAhead.h"
 
+#import "Compiler.h"
 
-@implementation Literal
+@implementation LookAhead
 
-@synthesize string = _string;
+@synthesize node = _node;
 
 //==================================================================================================
 #pragma mark -
-#pragma mark Public Methods
+#pragma mark NSObject Methods
 //==================================================================================================
 
 - (void) dealloc
 {
-    [_string release];
+    [_node release];
     
     [super dealloc];
 }
 
-
 //==================================================================================================
 #pragma mark -
-#pragma mark Terminal Methods
+#pragma mark Node Methods
 //==================================================================================================
 
-- (NSString *) condition
+- (NSString *) compile:(NSString *)failLabel
 {
-    return [NSString stringWithFormat:@"[self _matchString:\"%@\"]", self.string];
+    NSMutableString *code = [NSMutableString string];
+    
+    NSString *index     = [[Compiler class] unique:@"index"];
+    NSString *thunkpos  = [[Compiler class] unique:@"yythunkpos"];
+    
+    [code appendFormat:@"    NSUInteger %@=_index, %@=yythunkpos;\n", index, thunkpos];
+    [code appendString:[self.node compile:failLabel]];
+    [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
+    
+    return code;
 }
 
 
@@ -42,19 +51,19 @@
 #pragma mark Public Methods
 //==================================================================================================
 
-+ (id) literalWithString:(NSString *)string
++ (id) lookAheadWithNode:(Node *)node
 {
-    return [[[[self class] alloc] initWithString:string] autorelease];
+    return [[[[self class] alloc] initWithNode:node] autorelease];
 }
 
 
-- (id) initWithString:(NSString *)string
+- (id) initWithNode:(Node *)node
 {
     self = [super init];
     
     if (self)
     {
-        _string = [string copy];
+        _node = [node retain];
     }
     
     return self;

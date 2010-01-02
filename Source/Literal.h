@@ -8,9 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-#import "Node.h"
+#import "Terminal.h"
 
-@interface Literal : Node
+@interface Literal : Terminal
 {
     NSString *_string;
 }

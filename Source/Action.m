@@ -8,10 +8,12 @@
 
 #import "Action.h"
 
+#import "Rule.h"
 
 @implementation Action
 
 @synthesize code = _code;
+@synthesize rule = _rule;
 
 //==================================================================================================
 #pragma mark -
@@ -20,9 +22,23 @@
 
 - (void) dealloc
 {
+    [_selectorName release];
     [_code release];
+    [_rule release];
     
     [super dealloc];
+}
+
+
+//==================================================================================================
+#pragma mark -
+#pragma mark Node Methods
+//==================================================================================================
+
+- (NSString *) compile:(NSString *)failLabel
+{
+    return [NSString stringWithFormat:@"    [self yyDo:@selector(%@:) from:yybegin to:yyend];\n",
+            self.selectorName];
 }
 
 
@@ -47,6 +63,19 @@
     }
     
     return self;
+}
+
+
+//==================================================================================================
+#pragma mark -
+#pragma mark Public Methods
+//==================================================================================================
+
+- (NSString *) selectorName
+{
+    if (!_selectorName)
+        _selectorName = [[self.rule nextActionSelectorName] retain];
+    return _selectorName;
 }
 
 

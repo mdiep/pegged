@@ -8,11 +8,12 @@
 
 #import <Foundation/Foundation.h>
 
-#import "Node.h"
+#import "Terminal.h"
 
-@interface CClass : Node
+@interface CClass : Terminal
 {
     NSString *_string;
+    NSString *_repr;
 }
 
 @property (readonly) NSString *string;

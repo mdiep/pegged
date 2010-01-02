@@ -1,38 +1,36 @@
 //
-//  Node.m
+//  Terminal.m
 //  preggers
 //
-//  Created by Matt Diephouse on 12/29/09.
+//  Created by Matt Diephouse on 1/1/10.
 //  This code is in the public domain.
 //
 
-#import "Node.h"
+#import "Terminal.h"
 
+#import "Compiler.h"
 
-@implementation Node
-
-@synthesize inverted    = _inverted;
+@implementation Terminal
 
 //==================================================================================================
 #pragma mark -
 #pragma mark Public Methods
 //==================================================================================================
 
-+ (id) node
-{
-    return [[[self class] new] autorelease];
-}
-
-
 - (NSString *) compile:(NSString *)failLabel
 {
-    return nil;
+    NSMutableString *code = [NSMutableString string];
+    
+    [code appendFormat:@"    if (%@%@) goto %@;\n",
+     self.inverted ? @"" : @"!", [self condition], failLabel];
+    
+    return code;
 }
 
 
-- (void) invert
+- (NSString *) condition
 {
-    self.inverted = !self.inverted;
+    return nil;
 }
 
 

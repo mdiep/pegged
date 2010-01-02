@@ -8,6 +8,8 @@
 
 #import "Rule.h"
 
+#import "Compiler.h"
+#import "Node.h"
 
 @implementation Rule
 
@@ -53,6 +55,34 @@
 }
 
 
+- (NSString *) compile
+{
+    NSMutableString *code = [NSMutableString string];
+    
+    NSString *index     = [[Compiler class] unique:@"index"];
+    NSString *thunkpos  = [[Compiler class] unique:@"yythunkpos"];
+    NSString *failLabel = [[Compiler class] unique:@"L"];
+    
+    [code appendFormat:@"    NSUInteger %@=_index, %@=yythunkpos;\n", index, thunkpos];
+    [code appendFormat:@"    yyprintf((stderr, \"%%s\", \"%@\"));\n", self.name];
+    [code appendString:[self.definition compile:failLabel]];
+    [code appendFormat:@"    yyprintf((stderr, \"  ok   %%s\", \"%@\"));\n", self.name];
+    [code appendFormat:@"    return YES;\n"];
+    [code appendFormat:@"%@:\n", failLabel];
+    [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
+    [code appendFormat:@"    yyprintf((stderr, \"  fail %%s\", \"%@\"));\n", self.name];
+    [code appendFormat:@"    return NO;\n"];
+    
+    return code;
+}
+
+
+- (NSString *) nextActionSelectorName
+{
+    return [NSString stringWithFormat:@"yy_%u_%@", ++_nextSelectorNumber, self.name];
+}
+
+
 //==================================================================================================
 #pragma mark -
 #pragma mark Public Properties
@@ -61,6 +91,12 @@
 - (BOOL) defined
 {
     return self.definition != nil;
+}
+
+
+- (NSString *) selectorName
+{
+    return [NSString stringWithFormat:@"match%@", self.name];
 }
 
 

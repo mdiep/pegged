@@ -1,26 +1,26 @@
 //
-//  Literal.m
+//  Code.m
 //  preggers
 //
-//  Created by Matt Diephouse on 12/29/09.
+//  Created by Matt Diephouse on 1/1/10.
 //  This code is in the public domain.
 //
 
-#import "Literal.h"
+#import "Code.h"
 
 
-@implementation Literal
+@implementation Code
 
-@synthesize string = _string;
+@synthesize code = _code;
 
 //==================================================================================================
 #pragma mark -
-#pragma mark Public Methods
+#pragma mark NSObject Methods
 //==================================================================================================
 
 - (void) dealloc
 {
-    [_string release];
+    [_code release];
     
     [super dealloc];
 }
@@ -28,12 +28,12 @@
 
 //==================================================================================================
 #pragma mark -
-#pragma mark Terminal Methods
+#pragma mark Node Methods
 //==================================================================================================
 
-- (NSString *) condition
+- (NSString *) compile:(NSString *)failLabel
 {
-    return [NSString stringWithFormat:@"[self _matchString:\"%@\"]", self.string];
+    return [NSString stringWithFormat:@"    %@;\n", self.code];
 }
 
 
@@ -42,23 +42,22 @@
 #pragma mark Public Methods
 //==================================================================================================
 
-+ (id) literalWithString:(NSString *)string
++ (id) codeWithString:(NSString *)code
 {
-    return [[[[self class] alloc] initWithString:string] autorelease];
+    return [[[[self class] alloc] initWithString:code] autorelease];
 }
 
 
-- (id) initWithString:(NSString *)string
+- (id) initWithString:(NSString *)code
 {
     self = [super init];
     
     if (self)
     {
-        _string = [string copy];
+        _code = [code copy];
     }
     
     return self;
 }
-
 
 @end
