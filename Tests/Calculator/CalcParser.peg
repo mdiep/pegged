@@ -1,0 +1,29 @@
+
+Equation <- Primary EndOfFile
+
+Primary <- Secondary ( ADD Secondary { [self.compiler add]; }
+                     / SUB Secondary { [self.compiler subtract]; }
+                     )*
+
+Secondary <- Tertiary ( MUL Tertiary { [self.compiler multiply]; }
+                      / DIV Tertiary { [self.compiler divide];   }
+                      )*
+
+Tertiary <- Terminal EXP Tertiary { [self.compiler exponent]; }
+          / Terminal
+
+Terminal <- OPEN Primary CLOSE
+          / Number { [self.compiler pushNumber:text]; }
+
+Number <- < [0-9+] > _
+
+OPEN      <- '(' _
+CLOSE     <- ')' _
+
+EXP       <- '**' _
+MUL       <- '*' _
+DIV       <- '/' _
+ADD       <- '+' _
+SUB       <- '-' _
+_         <- ' '*
+EndOfFile <- !.
