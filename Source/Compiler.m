@@ -458,15 +458,15 @@ const NSString *__sourceTemplate = @"\
     return NO;\n\
 }\n\
 \n\
-- (void) yyDo:(SEL)action from:(int)begin to:(int)end\n\
+- (void) yyDo:(SEL)action\n\
 {\n\
     while (yythunkpos >= yythunkslen)\n\
     {\n\
         yythunkslen *= 2;\n\
         yythunks= realloc(yythunks, sizeof(yythunk) * yythunkslen);\n\
     }\n\
-    yythunks[yythunkpos].begin=  begin;\n\
-    yythunks[yythunkpos].end=    end;\n\
+    yythunks[yythunkpos].begin=  yybegin;\n\
+    yythunks[yythunkpos].end=    yyend;\n\
     yythunks[yythunkpos].action= action;\n\
     ++yythunkpos;\n\
 }\n\

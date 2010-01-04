@@ -139,15 +139,15 @@
     return NO;
 }
 
-- (void) yyDo:(SEL)action from:(int)begin to:(int)end
+- (void) yyDo:(SEL)action
 {
     while (yythunkpos >= yythunkslen)
     {
         yythunkslen *= 2;
         yythunks= realloc(yythunks, sizeof(yythunk) * yythunkslen);
     }
-    yythunks[yythunkpos].begin=  begin;
-    yythunks[yythunkpos].end=    end;
+    yythunks[yythunkpos].begin=  yybegin;
+    yythunks[yythunkpos].end=    yyend;
     yythunks[yythunkpos].action= action;
     ++yythunkpos;
 }
@@ -454,10 +454,10 @@ L75:
     NSUInteger index78=_index, yythunkpos79=yythunkpos;
     yyprintf((stderr, "%s", "Definition"));
     if (![self matchIdentifier]) goto L80;
-    [self yyDo:@selector(yy_1_Definition:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_1_Definition:)];
     if (![self matchLEFTARROW]) goto L80;
     if (![self matchExpression]) goto L80;
-    [self yyDo:@selector(yy_2_Definition:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_2_Definition:)];
     yyprintf((stderr, "  ok   %s", "Definition"));
     return YES;
 L80:
@@ -530,7 +530,7 @@ L108:
     index106=_index; yythunkpos107=yythunkpos;
     if (![self matchSLASH]) goto L109;
     if (![self matchSequence]) goto L109;
-    [self yyDo:@selector(yy_1_Expression:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_1_Expression:)];
     goto L108;
 L109:
     _index=index106; yythunkpos=yythunkpos107;
@@ -734,13 +734,13 @@ L184:
     NSUInteger index190=_index, yythunkpos191=yythunkpos;
     if (![self matchAND]) goto L193;
     if (![self matchSuffix]) goto L193;
-    [self yyDo:@selector(yy_1_Prefix:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_1_Prefix:)];
     goto L192;
 L193:
     _index=index190; yythunkpos=yythunkpos191;
     if (![self matchNOT]) goto L196;
     if (![self matchSuffix]) goto L196;
-    [self yyDo:@selector(yy_2_Prefix:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_2_Prefix:)];
     goto L192;
 L196:
     _index=index190; yythunkpos=yythunkpos191;
@@ -764,7 +764,7 @@ L189:
     NSUInteger index208=_index, yythunkpos209=yythunkpos;
     if ([self matchLEFTARROW]) goto L205;
     _index=index208; yythunkpos=yythunkpos209;
-    [self yyDo:@selector(yy_1_Primary:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_1_Primary:)];
     goto L204;
 L205:
     _index=index202; yythunkpos=yythunkpos203;
@@ -775,32 +775,32 @@ L205:
 L210:
     _index=index202; yythunkpos=yythunkpos203;
     if (![self matchLiteral]) goto L213;
-    [self yyDo:@selector(yy_2_Primary:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_2_Primary:)];
     goto L204;
 L213:
     _index=index202; yythunkpos=yythunkpos203;
     if (![self matchClass]) goto L216;
-    [self yyDo:@selector(yy_3_Primary:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_3_Primary:)];
     goto L204;
 L216:
     _index=index202; yythunkpos=yythunkpos203;
     if (![self matchDOT]) goto L219;
-    [self yyDo:@selector(yy_4_Primary:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_4_Primary:)];
     goto L204;
 L219:
     _index=index202; yythunkpos=yythunkpos203;
     if (![self matchAction]) goto L222;
-    [self yyDo:@selector(yy_5_Primary:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_5_Primary:)];
     goto L204;
 L222:
     _index=index202; yythunkpos=yythunkpos203;
     if (![self matchBEGIN]) goto L225;
-    [self yyDo:@selector(yy_6_Primary:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_6_Primary:)];
     goto L204;
 L225:
     _index=index202; yythunkpos=yythunkpos203;
     if (![self matchEND]) goto L201;
-    [self yyDo:@selector(yy_7_Primary:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_7_Primary:)];
     goto L204;
 L204:
     yyprintf((stderr, "  ok   %s", "Primary"));
@@ -890,7 +890,7 @@ L262:
 L265:
     index263=_index; yythunkpos264=yythunkpos;
     if (![self matchPrefix]) goto L266;
-    [self yyDo:@selector(yy_1_Sequence:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_1_Sequence:)];
     goto L265;
 L266:
     _index=index263; yythunkpos=yythunkpos264;
@@ -961,17 +961,17 @@ L279:
     NSUInteger index293=_index, yythunkpos294=yythunkpos;
     NSUInteger index297=_index, yythunkpos298=yythunkpos;
     if (![self matchQUESTION]) goto L300;
-    [self yyDo:@selector(yy_1_Suffix:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_1_Suffix:)];
     goto L299;
 L300:
     _index=index297; yythunkpos=yythunkpos298;
     if (![self matchSTAR]) goto L303;
-    [self yyDo:@selector(yy_2_Suffix:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_2_Suffix:)];
     goto L299;
 L303:
     _index=index297; yythunkpos=yythunkpos298;
     if (![self matchPLUS]) goto L295;
-    [self yyDo:@selector(yy_3_Suffix:) from:yybegin to:yyend];
+    [self yyDo:@selector(yy_3_Suffix:)];
     goto L299;
 L299:
     goto L296;

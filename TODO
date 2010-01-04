@@ -1,6 +1,5 @@
  * Add an option for case-insensitive parsing
  * Add &{...} and !{...} forms
- * Simplify yyDo:from:to: to yyDo:
  * Fix grammar to remove some undefined cases, such as &{...}?, which currently parse
  * Customizable member variables
  * Add error messages

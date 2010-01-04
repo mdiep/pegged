@@ -37,7 +37,7 @@
 
 - (NSString *) compile:(NSString *)failLabel
 {
-    return [NSString stringWithFormat:@"    [self yyDo:@selector(%@:) from:yybegin to:yyend];\n",
+    return [NSString stringWithFormat:@"    [self yyDo:@selector(%@:)];\n",
             self.selectorName];
 }
 
