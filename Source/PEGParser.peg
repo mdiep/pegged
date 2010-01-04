@@ -19,6 +19,7 @@ Sequence   <- Prefix? (Prefix { [self.compiler append]; })*
 Prefix     <- AND Suffix { [self.compiler parsedLookAhead]; }
             / NOT Suffix { [self.compiler parsedNegativeLookAhead]; }
             /     Suffix
+            /     Effect
 Suffix     <- Primary ( QUESTION    { [self.compiler parsedQuestion]; }
                       / STAR        { [self.compiler parsedStar]; }
                       / PLUS        { [self.compiler parsedPlus]; }
@@ -28,7 +29,8 @@ Primary    <- Identifier !LEFTARROW { [self.compiler parsedIdentifier:text]; }
             / Literal   { [self.compiler parsedLiteral:text]; }
             / Class     { [self.compiler parsedClass:text]; }
             / DOT       { [self.compiler parsedDot]; }
-            / Action    { [self.compiler parsedAction:text]; }
+
+Effect     <- Action    { [self.compiler parsedAction:text]; }
             / BEGIN     { [self.compiler beginCapture]; }
             / END       { [self.compiler endCapture]; }
 

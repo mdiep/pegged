@@ -1,5 +1,4 @@
  * Add an option for case-insensitive parsing
  * Add &{...} and !{...} forms
- * Fix grammar to remove some undefined cases, such as &{...}?, which currently parse
  * Customizable member variables
  * Add error messages
