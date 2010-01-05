@@ -101,6 +101,15 @@ const NSString *__sourceTemplate;
     for (NSString *name in [[_rules allKeys] sortedArrayUsingSelector:@selector(compare:)])
     {
         Rule *rule = [_rules objectForKey:name];
+        // Check if that the rule has been both used and defined
+        if (rule.defined && !rule.used && rule != _startRule)
+            fprintf(stderr, "rule '%s' defined but not used\n", [rule.name UTF8String]);
+        if (rule.used && !rule.defined)
+        {
+            fprintf(stderr, "rule '%s' used but not defined\n", [rule.name UTF8String]);
+            continue;
+        }
+        
         [declarations appendFormat:@"- (BOOL) %@;\n", rule.selectorName];
         [definitions appendFormat:@"- (BOOL) %@\n{\n", rule.selectorName];
         [definitions appendString:[rule compile]];
@@ -264,6 +273,10 @@ const NSString *__sourceTemplate;
     [_stack removeLastObject];
     Rule *rule = [_stack lastObject];
     [_stack removeLastObject];
+    
+    if (rule.defined)
+        fprintf(stderr, "rule '%s' redefined\n", [rule.name UTF8String]);
+    
     rule.definition = definition;
 }
 

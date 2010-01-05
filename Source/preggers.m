@@ -45,6 +45,11 @@ int main (int argc, const char * argv[])
         compiler.sourcePath = [fileWithoutExtension stringByAppendingPathExtension:@"m"];
         [compiler compile];
     }
+    else
+    {
+        fprintf(stderr, "syntax error\n");
+    }
+
     [compiler release];
 
     [pool drain];
