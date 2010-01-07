@@ -79,9 +79,18 @@ typedef CGFloat (^BinaryOp)(CGFloat left, CGFloat right);
     }];
 }
 
+- (void) negative
+{
+    _negative = !_negative;
+}
+
 - (void) pushNumber:(NSString *)text
 {
-    [_stack addObject:[_formatter numberFromString:text]];
+    NSNumber *number = [_formatter numberFromString:text];
+    if (_negative)
+        number = [NSNumber numberWithFloat:0 - [number floatValue]];
+    [_stack addObject:number];
+    _negative = NO;
 }
 
 - (NSNumber *) result

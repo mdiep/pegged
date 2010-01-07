@@ -13,6 +13,8 @@
 {
     NSNumberFormatter *_formatter;
     NSMutableArray *_stack;
+    
+    BOOL _negative;
 }
 
 @property (readonly) NSNumber *result;
@@ -22,6 +24,7 @@
 - (void) exponent;
 - (void) multiply;
 - (void) subtract;
+- (void) negative;
 - (void) pushNumber:(NSString *)text;
 
 @end
