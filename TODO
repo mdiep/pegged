@@ -1,3 +1,2 @@
- * Add an option for case-insensitive parsing
  * Add &{...} and !{...} forms
  * Customizable member variables
