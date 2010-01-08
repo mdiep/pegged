@@ -13,8 +13,11 @@
 @interface Literal : Terminal
 {
     NSString *_string;
+    
+    BOOL _caseInsensitive;
 }
 
+@property (assign) BOOL caseInsensitive;
 @property (readonly) NSString *string;
 
 + (id) literalWithString:(NSString *)string;

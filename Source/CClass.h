@@ -14,8 +14,11 @@
 {
     NSString *_string;
     NSString *_repr;
+    
+    BOOL _caseInsensitive;
 }
 
+@property (assign) BOOL caseInsensitive;
 @property (readonly) NSString *string;
 
 + (id) cclassFromString:(NSString *)class;

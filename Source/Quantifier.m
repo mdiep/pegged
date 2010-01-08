@@ -44,7 +44,7 @@
     {
         NSString *loop = [[Compiler class] unique:@"L"];
         NSString *exit = [[Compiler class] unique:@"L"];
-        [code appendFormat:@"    {}\n"];
+        [code appendFormat:@"    ;\n"];
         [code appendFormat:@"    NSUInteger %@, %@;\n", index, thunkpos];
         [code appendFormat:@"%@:\n", loop];
         [code appendFormat:@"    %@=_index; %@=yythunkpos;\n", index, thunkpos];
@@ -70,6 +70,7 @@
         
         NSString *loop = [[Compiler class] unique:@"L"];
         NSString *exit = [[Compiler class] unique:@"L"];
+        [code appendFormat:@"    ;\n"];
         [code appendFormat:@"    NSUInteger %@, %@;\n", index, thunkpos];
         [code appendFormat:@"%@:\n", loop];
         [code appendFormat:@"    %@=_index; %@=yythunkpos;\n", index, thunkpos];

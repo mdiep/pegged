@@ -18,10 +18,14 @@
     Rule *_startRule;
     Rule *_currentRule;
     
+    BOOL _caseInsensitive;
+    
     NSString *_className;
     NSString *_headerPath;
     NSString *_sourcePath;
 }
+
+@property (assign) BOOL caseInsensitive;
 
 @property (copy) NSString *className;
 @property (copy) NSString *headerPath;

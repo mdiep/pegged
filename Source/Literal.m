@@ -11,6 +11,7 @@
 
 @implementation Literal
 
+@synthesize caseInsensitive = _caseInsensitive;
 @synthesize string = _string;
 
 //==================================================================================================
@@ -33,7 +34,8 @@
 
 - (NSString *) condition
 {
-    return [NSString stringWithFormat:@"[self _matchString:\"%@\"]", self.string];
+    NSString *string = self.caseInsensitive ? [self.string lowercaseString] : self.string;
+    return [NSString stringWithFormat:@"[self _matchString:\"%@\"]", string];
 }
 
 

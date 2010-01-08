@@ -10,7 +10,7 @@
 
 #include <stdlib.h>
 
-static void setbit (unsigned char bitset[], int c, BOOL negative)
+static void setbit(unsigned char bitset[], int c, BOOL negative)
 {
     if (negative)
         bitset[c >> 3] &= ~(1 << (c & 7));
@@ -18,8 +18,44 @@ static void setbit (unsigned char bitset[], int c, BOOL negative)
         bitset[c >> 3] |=  (1 << (c & 7));
 }
 
+static void setbits(unsigned char bitset[], const char *cstring, BOOL negative)
+{
+    if (negative)
+        cstring++;
+    
+    int c, prev=-1;
+    while ((c= *cstring++))
+    {
+        if ('-' == c && *cstring && prev >= 0)
+        {
+            for (c= *cstring++;  prev <= c;  ++prev)
+                setbit(bitset, prev, negative);
+            prev = -1;
+        }
+        else if ('\\' == c && *cstring)
+        {
+            switch (c = *cstring++)
+            {
+                case 'a':  c= '\a'; break;	/* bel */
+                case 'b':  c= '\b'; break;	/* bs */
+                case 'e':  c= '\e'; break;	/* esc */
+                case 'f':  c= '\f'; break;	/* ff */
+                case 'n':  c= '\n'; break;	/* nl */
+                case 'r':  c= '\r'; break;	/* cr */
+                case 't':  c= '\t'; break;	/* ht */
+                case 'v':  c= '\v'; break;	/* vt */
+                default:		break;
+            }
+            setbit(bitset, prev=c, negative);
+        }
+        else
+            setbit(bitset, prev=c, negative);
+    }
+}
+
 @implementation CClass
 
+@synthesize caseInsensitive = _caseInsensitive;
 @synthesize string = _string;
 
 //==================================================================================================
@@ -47,44 +83,22 @@ static void setbit (unsigned char bitset[], int c, BOOL negative)
     {
         const char *cstring = [_string UTF8String];
         BOOL negative = *cstring == '^';
-        if (negative)
-            cstring++;
         
         unsigned char bitset[32];
         memset(bitset, negative ? 255 : 0, 32);
         
-        int c, prev=-1;
-        while ((c= *cstring++))
+        if (self.caseInsensitive)
         {
-            if ('-' == c && *cstring && prev >= 0)
-            {
-                for (c= *cstring++;  prev <= c;  ++prev)
-                    setbit(bitset, prev, negative);
-                prev = -1;
-            }
-            else if ('\\' == c && *cstring)
-            {
-                switch (c = *cstring++)
-                {
-                    case 'a':  c= '\a'; break;	/* bel */
-                    case 'b':  c= '\b'; break;	/* bs */
-                    case 'e':  c= '\e'; break;	/* esc */
-                    case 'f':  c= '\f'; break;	/* ff */
-                    case 'n':  c= '\n'; break;	/* nl */
-                    case 'r':  c= '\r'; break;	/* cr */
-                    case 't':  c= '\t'; break;	/* ht */
-                    case 'v':  c= '\v'; break;	/* vt */
-                    default:		break;
-                }
-                setbit(bitset, prev=c, negative);
-            }
-            else
-                setbit(bitset, prev=c, negative);
+            setbits(bitset, [[_string lowercaseString] UTF8String], negative);
+            setbits(bitset, [[_string uppercaseString] UTF8String], negative);
         }
+        else
+            setbits(bitset, cstring, negative);
+            
         
         char string[256];
         char *ptr = string;
-        for (c=0;  c < 32;  ++c)
+        for (int c=0;  c < 32;  ++c)
             ptr += sprintf(ptr, "\\%03o", bitset[c]);
         _repr = [NSString stringWithUTF8String:string];
     }

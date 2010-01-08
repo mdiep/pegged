@@ -28,6 +28,8 @@ const NSString *__sourceTemplate;
 
 @implementation Compiler
 
+@synthesize caseInsensitive = _caseInsensitive;
+
 @synthesize className  = _className;
 @synthesize headerPath = _headerPath;
 @synthesize sourcePath = _sourcePath;
@@ -93,6 +95,8 @@ const NSString *__sourceTemplate;
     // Generate the source
     NSMutableString *declarations = [NSMutableString new];
     NSMutableString *definitions  = [NSMutableString new];
+    if (self.caseInsensitive)
+        [declarations appendFormat:@"#define %@_CASE_INSENSITIVE\n", [self.className uppercaseString]];
     for (Action *action in _actions)
     {
         [definitions appendFormat:@"- (void) %@:(NSString *)text\n{\n%@;\n}\n\n",
@@ -115,7 +119,7 @@ const NSString *__sourceTemplate;
         [definitions appendString:[rule compile]];
         [definitions appendFormat:@"}\n\n", rule.selectorName];
     }
-    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PREGGERS_VERSION_MAJOR, PREGGERS_VERSION_MINOR, PREGGERS_VERSION_CHANGE, self.className, self.className, declarations, self.className, definitions, _startRule.selectorName];
+    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PREGGERS_VERSION_MAJOR, PREGGERS_VERSION_MINOR, PREGGERS_VERSION_CHANGE, self.className, self.className, declarations, self.className, [self.className uppercaseString], definitions, _startRule.selectorName];
     [declarations release];
     [definitions release];
     [source writeToFile:self.sourcePath atomically:NO encoding:NSUTF8StringEncoding error:&error];
@@ -192,7 +196,9 @@ const NSString *__sourceTemplate;
 
 - (void) parsedClass:(NSString *)class
 {
-    [_stack addObject:[CClass cclassFromString:class]];
+    CClass *cclass = [CClass cclassFromString:class];
+    cclass.caseInsensitive = self.caseInsensitive;
+    [_stack addObject:cclass];
 }
 
 
@@ -218,7 +224,9 @@ const NSString *__sourceTemplate;
 
 - (void) parsedLiteral:(NSString *)literal
 {
-    [_stack addObject:[Literal literalWithString:literal]];
+    Literal *node = [Literal literalWithString:literal];
+    node.caseInsensitive = self.caseInsensitive;
+    [_stack addObject:node];
 }
 
 
@@ -373,7 +381,6 @@ const NSString *__sourceTemplate = @"\
 @interface %@ ()\n\
 \n\
 - (BOOL) _matchDot;\n\
-- (BOOL) _matchChar:(int)c;\n\
 - (BOOL) _matchString:(char *)s;\n\
 - (BOOL) _matchClass:(unsigned char *)bits;\n\
 %@\n\
@@ -426,22 +433,13 @@ const NSString *__sourceTemplate = @"\
     return YES;\n\
 }\n\
 \n\
-- (BOOL) _matchChar:(int)c\n\
-{\n\
-    if (_index >= _limit && ![self _refill]) return NO;\n\
-    if ([_string characterAtIndex:_index] == c)\n\
-    {\n\
-        ++_index;\n\
-        yyprintf((stderr, \"  ok   _matchChar(%%c)\", c));\n\
-        return YES;\n\
-    }\n\
-    yyprintf((stderr, \"  fail _matchChar(%%c)\", c));\n\
-    return NO;\n\
-}\n\
-\n\
 - (BOOL) _matchString:(char *)s\n\
 {\n\
+#ifndef %@_CASE_INSENSITIVE\n\
     const char *cstring = [_string UTF8String];\n\
+#else\n\
+    const char *cstring = [[_string lowercaseString] UTF8String];\n\
+#endif\n\
     int saved = _index;\n\
     while (*s)\n\
     {\n\
@@ -449,11 +447,13 @@ const NSString *__sourceTemplate = @"\
         if (cstring[_index] != *s)\n\
         {\n\
             _index = saved;\n\
+    yyprintf((stderr, \"  fail _matchString\"));\n\
             return NO;\n\
         }\n\
         ++s;\n\
         ++_index;\n\
     }\n\
+    yyprintf((stderr, \"  ok   _matchString\"));\n\
     return YES;\n\
 }\n\
 \n\
@@ -506,7 +506,7 @@ const NSString *__sourceTemplate = @"\
     {\n\
         yythunk *thunk= &yythunks[pos];\n\
         [self yyText:thunk->begin to:thunk->end];\n\
-        yyprintf((stderr, \"DO [%%d] %%s %%s\\n\", pos, [NSStringFromSelector(thunk->action) UTF8String], yytext));\n\
+        yyprintf((stderr, \"DO [%%d] %%s %%s\\n\", pos, [NSStringFromSelector(thunk->action) UTF8String], [_text UTF8String]));\n\
         [self performSelector:thunk->action withObject:_text];\n\
     }\n\
     yythunkpos= 0;\n\

@@ -1,4 +1,6 @@
 
+@option case-insensitive
+
 Equation <- Primary EndOfFile
 
 Primary <- Secondary ( PLUS  Secondary { [self.compiler add]; }
@@ -10,16 +12,18 @@ Secondary <- Tertiary ( MUL Tertiary { [self.compiler multiply]; }
                       )*
 
 Tertiary <- Terminal EXP Tertiary { [self.compiler exponent]; }
+          / (PLUS / MINUS { [self.compiler negative]; })+ Tertiary
           / Terminal
 
 Terminal <- OPEN Primary CLOSE
-          / (PLUS / MINUS { [self.compiler negative]; })*
-                Number { [self.compiler pushNumber:text]; }
+          / "pow" OPEN Primary COMMA Primary CLOSE { [self.compiler exponent]; }
+          / Number { [self.compiler pushNumber:text]; }
 
 Number <- < [0-9+] > _
 
 OPEN      <- '(' _
 CLOSE     <- ')' _
+COMMA     <- ',' _
 
 EXP       <- '**' _
 MUL       <- '*' _
