@@ -10,9 +10,37 @@
 
 #import "Compiler.h"
 #import "PEGParser.h"
+#import "Version.h"
 
-int main (int argc, const char * argv[])
+#include <getopt.h>
+
+static int opt_version;
+static struct option longopts[] = {
+    { "version",    no_argument, &opt_version, 1 },
+    { NULL,         0,           NULL,         0 }
+};
+
+int main (int argc, char *argv[])
 {
+    int ch;
+    while ((ch = getopt_long(argc, argv, "", longopts, NULL)) != -1)
+        switch (ch)
+        {
+            case 0:
+                if (opt_version)
+                {
+                    printf("preggers version %u.%u.%u\n",
+                           (unsigned int)PREGGERS_VERSION_MAJOR,
+                           (unsigned int)PREGGERS_VERSION_MINOR,
+                           (unsigned int)PREGGERS_VERSION_CHANGE);
+                }
+                break;
+            default:
+                break;
+        }
+    argc -= optind;
+    argv += optind;
+    
     if (argc != 2)
         return 1;
     
