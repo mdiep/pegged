@@ -14,9 +14,14 @@
 
 #include <getopt.h>
 
+static const char *usage_string =
+"preggers [--version] [--help] file\n";
+
 static int opt_version;
+static int opt_help;
 static struct option longopts[] = {
     { "version",    no_argument, &opt_version, 1 },
+    { "help",       no_argument, &opt_help,    1 },
     { NULL,         0,           NULL,         0 }
 };
 
@@ -33,6 +38,12 @@ int main (int argc, char *argv[])
                            (unsigned int)PREGGERS_VERSION_MAJOR,
                            (unsigned int)PREGGERS_VERSION_MINOR,
                            (unsigned int)PREGGERS_VERSION_CHANGE);
+                    return 0;
+                }
+                else if (opt_help)
+                {
+                    printf("Usage: %s", usage_string);
+                    return 0;
                 }
                 break;
             default:
@@ -42,7 +53,10 @@ int main (int argc, char *argv[])
     argv += optind;
     
     if (argc != 2)
+    {
+        printf("Usage: %s", usage_string);
         return 1;
+    }
     
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     
