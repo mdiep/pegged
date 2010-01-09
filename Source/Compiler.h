@@ -46,7 +46,9 @@
 - (void) parsedIdentifier:(NSString *)identifier;
 - (void) parsedLiteral:(NSString *)literal;
 - (void) parsedLookAhead;
+- (void) parsedLookAhead:(NSString *)code;
 - (void) parsedNegativeLookAhead;
+- (void) parsedNegativeLookAhead:(NSString *)code;
 - (void) parsedPlus;
 - (void) parsedQuestion;
 - (void) parsedRule;

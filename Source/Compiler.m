@@ -12,6 +12,7 @@
 #import "Action.h"
 #import "CClass.h"
 #import "Code.h"
+#import "Condition.h"
 #import "Dot.h"
 #import "Expression.h"
 #import "Literal.h"
@@ -240,6 +241,13 @@ const NSString *__sourceTemplate;
 }
 
 
+- (void) parsedLookAhead:(NSString *)code
+{
+    Condition *condition = [Condition conditionWithExpression:code];
+    [_stack addObject:condition];
+}
+
+
 - (void) parsedNegativeLookAhead
 {
     Node *node = [_stack lastObject];
@@ -248,6 +256,14 @@ const NSString *__sourceTemplate;
     
     [node invert];
     [_stack addObject:lookAhead];
+}
+
+
+- (void) parsedNegativeLookAhead:(NSString *)code
+{
+    Condition *condition = [Condition conditionWithExpression:code];
+    [condition invert];
+    [_stack addObject:condition];
 }
 
 

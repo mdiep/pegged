@@ -21,6 +21,8 @@ Expression <- Sequence (SLASH Sequence { [self.compiler parsedAlternate]; })*
 Sequence   <- Prefix? (Prefix { [self.compiler append]; })*
 Prefix     <- AND Suffix { [self.compiler parsedLookAhead]; }
             / NOT Suffix { [self.compiler parsedNegativeLookAhead]; }
+            / AND Action { [self.compiler parsedLookAhead:text]; }
+            / NOT Action { [self.compiler parsedNegativeLookAhead:text]; }
             /     Suffix
             /     Effect
 Suffix     <- Primary ( QUESTION    { [self.compiler parsedQuestion]; }
