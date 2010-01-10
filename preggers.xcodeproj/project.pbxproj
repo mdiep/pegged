@@ -60,10 +60,10 @@
 			fileType = pattern.proxy;
 			isEditable = 1;
 			outputFiles = (
-				"$(INPUT_FILE_DIR)/$(INPUT_FILE_BASE).h",
-				"$(INPUT_FILE_DIR)/$(INPUT_FILE_BASE).m",
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).h",
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).m",
 			);
-			script = "${BUILT_PRODUCTS_DIR}/preggers ${INPUT_FILE_PATH}";
+			script = "${BUILT_PRODUCTS_DIR}/preggers --output-dir ${DERIVED_FILE_DIR} ${INPUT_FILE_PATH}";
 		};
 		BE94313610F8315100FA4E0A /* PBXBuildRule */ = {
 			isa = PBXBuildRule;
@@ -72,10 +72,10 @@
 			fileType = pattern.proxy;
 			isEditable = 1;
 			outputFiles = (
-				"$(INPUT_FILE_DIR)/$(INPUT_FILE_BASE).h",
-				"$(INPUT_FILE_DIR)/$(INPUT_FILE_BASE).m",
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).h",
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).m",
 			);
-			script = "${BUILT_PRODUCTS_DIR}/preggers ${INPUT_FILE_PATH}";
+			script = "${BUILT_PRODUCTS_DIR}/preggers --output-dir ${DERIVED_FILE_DIR} ${INPUT_FILE_PATH}";
 		};
 /* End PBXBuildRule section */
 
