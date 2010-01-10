@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "Compiler.h"
+#import "Calculator.h"
 #import "CalcParser.h"
 
 int main (int argc, const char * argv[])
@@ -34,18 +34,18 @@ int main (int argc, const char * argv[])
         NSString *expression = [parts objectAtIndex:0];
         NSNumber *result     = [formatter numberFromString:[parts lastObject]];
         
-        Compiler   *compiler = [Compiler new];
-        CalcParser *parser   = [CalcParser new];
-        parser.compiler = compiler;
+        Calculator *calculator = [Calculator new];
+        CalcParser *parser     = [CalcParser new];
+        parser.calculator = calculator;
         BOOL retval = [parser parseString:expression];
         [parser release];
-        if (!retval || ![result isEqualToNumber:compiler.result])
+        if (!retval || ![result isEqualToNumber:calculator.result])
         {
-            NSString *output = [NSString stringWithFormat:@"%@:%u: error: %@!=%@ (== %@)", file, line, expression, result, compiler.result];
+            NSString *output = [NSString stringWithFormat:@"%@:%u: error: %@!=%@ (== %@)", file, line, expression, result, calculator.result];
             fprintf(stderr, "%s", [output UTF8String]);
             hadError = YES;
         }
-        [compiler release];
+        [calculator release];
         line++;
     }
     

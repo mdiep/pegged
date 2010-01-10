@@ -19,13 +19,16 @@
 - (BOOL) matchClass;
 - (BOOL) matchComment;
 - (BOOL) matchDOT;
+- (BOOL) matchDeclaration;
 - (BOOL) matchDefinition;
 - (BOOL) matchEND;
 - (BOOL) matchEffect;
+- (BOOL) matchEndOfDecl;
 - (BOOL) matchEndOfFile;
 - (BOOL) matchEndOfLine;
 - (BOOL) matchExpression;
 - (BOOL) matchGrammar;
+- (BOOL) matchHorizSpace;
 - (BOOL) matchIdentCont;
 - (BOOL) matchIdentStart;
 - (BOOL) matchIdentifier;
@@ -34,10 +37,12 @@
 - (BOOL) matchNOT;
 - (BOOL) matchOPEN;
 - (BOOL) matchOPTION;
-- (BOOL) matchOption;
 - (BOOL) matchPLUS;
+- (BOOL) matchPROPERTY;
 - (BOOL) matchPrefix;
 - (BOOL) matchPrimary;
+- (BOOL) matchPropIdentifier;
+- (BOOL) matchPropParamaters;
 - (BOOL) matchQUESTION;
 - (BOOL) matchRange;
 - (BOOL) matchSLASH;
@@ -187,9 +192,29 @@
     yythunkpos= 0;
 }
 
-- (void) yy_1_Option:(NSString *)text
+- (void) yy_1_Declaration:(NSString *)text
 {
  self.compiler.caseInsensitive = YES; ;
+}
+
+- (void) yy_2_Declaration:(NSString *)text
+{
+ [self.compiler parsedPropertyParameters:text]; ;
+}
+
+- (void) yy_3_Declaration:(NSString *)text
+{
+ [self.compiler parsedPropertyType:text]; ;
+}
+
+- (void) yy_4_Declaration:(NSString *)text
+{
+ [self.compiler parsedPropertyStars:text]; ;
+}
+
+- (void) yy_5_Declaration:(NSString *)text
+{
+ [self.compiler parsedPropertyName:text]; ;
 }
 
 - (void) yy_1_Definition:(NSString *)text
@@ -458,632 +483,797 @@ L75:
     return NO;
 }
 
-- (BOOL) matchDefinition
+- (BOOL) matchDeclaration
 {
     NSUInteger index78=_index, yythunkpos79=yythunkpos;
-    yyprintf((stderr, "%s", "Definition"));
-    if (![self matchIdentifier]) goto L80;
-    [self yyDo:@selector(yy_1_Definition:)];
-    if (![self matchLEFTARROW]) goto L80;
-    if (![self matchExpression]) goto L80;
-    [self yyDo:@selector(yy_2_Definition:)];
-    yyprintf((stderr, "  ok   %s", "Definition"));
+    yyprintf((stderr, "%s", "Declaration"));
+    NSUInteger index81=_index, yythunkpos82=yythunkpos;
+    if (![self matchOPTION]) goto L84;
+    if (![self _matchString:"case-insensitive"]) goto L84;
+    ;
+    NSUInteger index87, yythunkpos88;
+L89:
+    index87=_index; yythunkpos88=yythunkpos;
+    if (![self matchHorizSpace]) goto L90;
+    goto L89;
+L90:
+    _index=index87; yythunkpos=yythunkpos88;
+    if (![self matchEndOfDecl]) goto L84;
+    [self yyDo:@selector(yy_1_Declaration:)];
+    goto L83;
+L84:
+    _index=index81; yythunkpos=yythunkpos82;
+    if (![self matchPROPERTY]) goto L80;
+    NSUInteger index93=_index, yythunkpos94=yythunkpos;
+    if (![self matchPropParamaters]) goto L95;
+    [self yyDo:@selector(yy_2_Declaration:)];
+    goto L96;
+L95:
+    _index=index93; yythunkpos=yythunkpos94;
+L96:
+    if (![self matchPropIdentifier]) goto L80;
+    [self yyDo:@selector(yy_3_Declaration:)];
+    yybegin = _index;
+    ;
+    NSUInteger index99, yythunkpos100;
+L101:
+    index99=_index; yythunkpos100=yythunkpos;
+    if (![self _matchString:"*"]) goto L102;
+    goto L101;
+L102:
+    _index=index99; yythunkpos=yythunkpos100;
+    yyend = _index;
+    ;
+    NSUInteger index103, yythunkpos104;
+L105:
+    index103=_index; yythunkpos104=yythunkpos;
+    if (![self matchHorizSpace]) goto L106;
+    goto L105;
+L106:
+    _index=index103; yythunkpos=yythunkpos104;
+    [self yyDo:@selector(yy_4_Declaration:)];
+    if (![self matchPropIdentifier]) goto L80;
+    if (![self matchEndOfDecl]) goto L80;
+    [self yyDo:@selector(yy_5_Declaration:)];
+    goto L83;
+L83:
+    yyprintf((stderr, "  ok   %s", "Declaration"));
     return YES;
 L80:
     _index=index78; yythunkpos=yythunkpos79;
+    yyprintf((stderr, "  fail %s", "Declaration"));
+    return NO;
+}
+
+- (BOOL) matchDefinition
+{
+    NSUInteger index107=_index, yythunkpos108=yythunkpos;
+    yyprintf((stderr, "%s", "Definition"));
+    if (![self matchIdentifier]) goto L109;
+    [self yyDo:@selector(yy_1_Definition:)];
+    if (![self matchLEFTARROW]) goto L109;
+    if (![self matchExpression]) goto L109;
+    [self yyDo:@selector(yy_2_Definition:)];
+    yyprintf((stderr, "  ok   %s", "Definition"));
+    return YES;
+L109:
+    _index=index107; yythunkpos=yythunkpos108;
     yyprintf((stderr, "  fail %s", "Definition"));
     return NO;
 }
 
 - (BOOL) matchEND
 {
-    NSUInteger index83=_index, yythunkpos84=yythunkpos;
+    NSUInteger index112=_index, yythunkpos113=yythunkpos;
     yyprintf((stderr, "%s", "END"));
-    if (![self _matchString:">"]) goto L85;
-    if (![self matchSpacing]) goto L85;
+    if (![self _matchString:">"]) goto L114;
+    if (![self matchSpacing]) goto L114;
     yyprintf((stderr, "  ok   %s", "END"));
     return YES;
-L85:
-    _index=index83; yythunkpos=yythunkpos84;
+L114:
+    _index=index112; yythunkpos=yythunkpos113;
     yyprintf((stderr, "  fail %s", "END"));
     return NO;
 }
 
 - (BOOL) matchEffect
 {
-    NSUInteger index88=_index, yythunkpos89=yythunkpos;
+    NSUInteger index117=_index, yythunkpos118=yythunkpos;
     yyprintf((stderr, "%s", "Effect"));
-    NSUInteger index91=_index, yythunkpos92=yythunkpos;
-    if (![self matchAction]) goto L94;
+    NSUInteger index120=_index, yythunkpos121=yythunkpos;
+    if (![self matchAction]) goto L123;
     [self yyDo:@selector(yy_1_Effect:)];
-    goto L93;
-L94:
-    _index=index91; yythunkpos=yythunkpos92;
-    if (![self matchBEGIN]) goto L97;
+    goto L122;
+L123:
+    _index=index120; yythunkpos=yythunkpos121;
+    if (![self matchBEGIN]) goto L126;
     [self yyDo:@selector(yy_2_Effect:)];
-    goto L93;
-L97:
-    _index=index91; yythunkpos=yythunkpos92;
-    if (![self matchEND]) goto L90;
+    goto L122;
+L126:
+    _index=index120; yythunkpos=yythunkpos121;
+    if (![self matchEND]) goto L119;
     [self yyDo:@selector(yy_3_Effect:)];
-    goto L93;
-L93:
+    goto L122;
+L122:
     yyprintf((stderr, "  ok   %s", "Effect"));
     return YES;
-L90:
-    _index=index88; yythunkpos=yythunkpos89;
+L119:
+    _index=index117; yythunkpos=yythunkpos118;
     yyprintf((stderr, "  fail %s", "Effect"));
+    return NO;
+}
+
+- (BOOL) matchEndOfDecl
+{
+    NSUInteger index131=_index, yythunkpos132=yythunkpos;
+    yyprintf((stderr, "%s", "EndOfDecl"));
+    if (![self _matchString:";"]) goto L133;
+    ;
+    NSUInteger index136, yythunkpos137;
+L138:
+    index136=_index; yythunkpos137=yythunkpos;
+    if (![self matchHorizSpace]) goto L139;
+    goto L138;
+L139:
+    _index=index136; yythunkpos=yythunkpos137;
+    NSUInteger index140=_index, yythunkpos141=yythunkpos;
+    if (![self matchEndOfLine]) goto L143;
+    goto L142;
+L143:
+    _index=index140; yythunkpos=yythunkpos141;
+    if (![self matchComment]) goto L133;
+    goto L142;
+L142:
+    yyprintf((stderr, "  ok   %s", "EndOfDecl"));
+    return YES;
+L133:
+    _index=index131; yythunkpos=yythunkpos132;
+    yyprintf((stderr, "  fail %s", "EndOfDecl"));
     return NO;
 }
 
 - (BOOL) matchEndOfFile
 {
-    NSUInteger index102=_index, yythunkpos103=yythunkpos;
+    NSUInteger index144=_index, yythunkpos145=yythunkpos;
     yyprintf((stderr, "%s", "EndOfFile"));
-    NSUInteger index105=_index, yythunkpos106=yythunkpos;
-    if ([self _matchDot]) goto L104;
-    _index=index105; yythunkpos=yythunkpos106;
+    NSUInteger index147=_index, yythunkpos148=yythunkpos;
+    if ([self _matchDot]) goto L146;
+    _index=index147; yythunkpos=yythunkpos148;
     yyprintf((stderr, "  ok   %s", "EndOfFile"));
     return YES;
-L104:
-    _index=index102; yythunkpos=yythunkpos103;
+L146:
+    _index=index144; yythunkpos=yythunkpos145;
     yyprintf((stderr, "  fail %s", "EndOfFile"));
     return NO;
 }
 
 - (BOOL) matchEndOfLine
 {
-    NSUInteger index107=_index, yythunkpos108=yythunkpos;
+    NSUInteger index149=_index, yythunkpos150=yythunkpos;
     yyprintf((stderr, "%s", "EndOfLine"));
-    NSUInteger index110=_index, yythunkpos111=yythunkpos;
-    if (![self _matchString:"\r\n"]) goto L113;
-    goto L112;
-L113:
-    _index=index110; yythunkpos=yythunkpos111;
-    if (![self _matchString:"\n"]) goto L114;
-    goto L112;
-L114:
-    _index=index110; yythunkpos=yythunkpos111;
-    if (![self _matchString:"\r"]) goto L109;
-    goto L112;
-L112:
+    NSUInteger index152=_index, yythunkpos153=yythunkpos;
+    if (![self _matchString:"\r\n"]) goto L155;
+    goto L154;
+L155:
+    _index=index152; yythunkpos=yythunkpos153;
+    if (![self _matchString:"\n"]) goto L156;
+    goto L154;
+L156:
+    _index=index152; yythunkpos=yythunkpos153;
+    if (![self _matchString:"\r"]) goto L151;
+    goto L154;
+L154:
     yyprintf((stderr, "  ok   %s", "EndOfLine"));
     return YES;
-L109:
-    _index=index107; yythunkpos=yythunkpos108;
+L151:
+    _index=index149; yythunkpos=yythunkpos150;
     yyprintf((stderr, "  fail %s", "EndOfLine"));
     return NO;
 }
 
 - (BOOL) matchExpression
 {
-    NSUInteger index115=_index, yythunkpos116=yythunkpos;
+    NSUInteger index157=_index, yythunkpos158=yythunkpos;
     yyprintf((stderr, "%s", "Expression"));
-    if (![self matchSequence]) goto L117;
+    if (![self matchSequence]) goto L159;
     ;
-    NSUInteger index120, yythunkpos121;
-L122:
-    index120=_index; yythunkpos121=yythunkpos;
-    if (![self matchSLASH]) goto L123;
-    if (![self matchSequence]) goto L123;
+    NSUInteger index162, yythunkpos163;
+L164:
+    index162=_index; yythunkpos163=yythunkpos;
+    if (![self matchSLASH]) goto L165;
+    if (![self matchSequence]) goto L165;
     [self yyDo:@selector(yy_1_Expression:)];
-    goto L122;
-L123:
-    _index=index120; yythunkpos=yythunkpos121;
+    goto L164;
+L165:
+    _index=index162; yythunkpos=yythunkpos163;
     yyprintf((stderr, "  ok   %s", "Expression"));
     return YES;
-L117:
-    _index=index115; yythunkpos=yythunkpos116;
+L159:
+    _index=index157; yythunkpos=yythunkpos158;
     yyprintf((stderr, "  fail %s", "Expression"));
     return NO;
 }
 
 - (BOOL) matchGrammar
 {
-    NSUInteger index126=_index, yythunkpos127=yythunkpos;
+    NSUInteger index168=_index, yythunkpos169=yythunkpos;
     yyprintf((stderr, "%s", "Grammar"));
-    if (![self matchSpacing]) goto L128;
+    if (![self matchSpacing]) goto L170;
     ;
-    NSUInteger index131, yythunkpos132;
-L133:
-    index131=_index; yythunkpos132=yythunkpos;
-    if (![self matchOption]) goto L134;
-    goto L133;
-L134:
-    _index=index131; yythunkpos=yythunkpos132;
-    if (![self matchSpacing]) goto L128;
-    if (![self matchDefinition]) goto L128;
+    NSUInteger index173, yythunkpos174;
+L175:
+    index173=_index; yythunkpos174=yythunkpos;
+    if (![self matchDeclaration]) goto L176;
+    goto L175;
+L176:
+    _index=index173; yythunkpos=yythunkpos174;
+    if (![self matchSpacing]) goto L170;
+    if (![self matchDefinition]) goto L170;
     ;
-    NSUInteger index135, yythunkpos136;
-L137:
-    index135=_index; yythunkpos136=yythunkpos;
-    if (![self matchDefinition]) goto L138;
-    goto L137;
-L138:
-    _index=index135; yythunkpos=yythunkpos136;
-    if (![self matchEndOfFile]) goto L128;
+    NSUInteger index177, yythunkpos178;
+L179:
+    index177=_index; yythunkpos178=yythunkpos;
+    if (![self matchDefinition]) goto L180;
+    goto L179;
+L180:
+    _index=index177; yythunkpos=yythunkpos178;
+    if (![self matchEndOfFile]) goto L170;
     yyprintf((stderr, "  ok   %s", "Grammar"));
     return YES;
-L128:
-    _index=index126; yythunkpos=yythunkpos127;
+L170:
+    _index=index168; yythunkpos=yythunkpos169;
     yyprintf((stderr, "  fail %s", "Grammar"));
+    return NO;
+}
+
+- (BOOL) matchHorizSpace
+{
+    NSUInteger index181=_index, yythunkpos182=yythunkpos;
+    yyprintf((stderr, "%s", "HorizSpace"));
+    NSUInteger index184=_index, yythunkpos185=yythunkpos;
+    if (![self _matchString:" "]) goto L187;
+    goto L186;
+L187:
+    _index=index184; yythunkpos=yythunkpos185;
+    if (![self _matchString:"\t"]) goto L183;
+    goto L186;
+L186:
+    yyprintf((stderr, "  ok   %s", "HorizSpace"));
+    return YES;
+L183:
+    _index=index181; yythunkpos=yythunkpos182;
+    yyprintf((stderr, "  fail %s", "HorizSpace"));
     return NO;
 }
 
 - (BOOL) matchIdentCont
 {
-    NSUInteger index139=_index, yythunkpos140=yythunkpos;
+    NSUInteger index188=_index, yythunkpos189=yythunkpos;
     yyprintf((stderr, "%s", "IdentCont"));
-    NSUInteger index142=_index, yythunkpos143=yythunkpos;
-    if (![self matchIdentStart]) goto L145;
-    goto L144;
-L145:
-    _index=index142; yythunkpos=yythunkpos143;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L141;
-    goto L144;
-L144:
+    NSUInteger index191=_index, yythunkpos192=yythunkpos;
+    if (![self matchIdentStart]) goto L194;
+    goto L193;
+L194:
+    _index=index191; yythunkpos=yythunkpos192;
+    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L190;
+    goto L193;
+L193:
     yyprintf((stderr, "  ok   %s", "IdentCont"));
     return YES;
-L141:
-    _index=index139; yythunkpos=yythunkpos140;
+L190:
+    _index=index188; yythunkpos=yythunkpos189;
     yyprintf((stderr, "  fail %s", "IdentCont"));
     return NO;
 }
 
 - (BOOL) matchIdentStart
 {
-    NSUInteger index146=_index, yythunkpos147=yythunkpos;
+    NSUInteger index195=_index, yythunkpos196=yythunkpos;
     yyprintf((stderr, "%s", "IdentStart"));
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\000\000\376\377\377\207\376\377\377\007\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L148;
+    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\000\000\376\377\377\207\376\377\377\007\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L197;
     yyprintf((stderr, "  ok   %s", "IdentStart"));
     return YES;
-L148:
-    _index=index146; yythunkpos=yythunkpos147;
+L197:
+    _index=index195; yythunkpos=yythunkpos196;
     yyprintf((stderr, "  fail %s", "IdentStart"));
     return NO;
 }
 
 - (BOOL) matchIdentifier
 {
-    NSUInteger index149=_index, yythunkpos150=yythunkpos;
+    NSUInteger index198=_index, yythunkpos199=yythunkpos;
     yyprintf((stderr, "%s", "Identifier"));
     yybegin = _index;
-    if (![self matchIdentStart]) goto L151;
+    if (![self matchIdentStart]) goto L200;
     ;
-    NSUInteger index154, yythunkpos155;
-L156:
-    index154=_index; yythunkpos155=yythunkpos;
-    if (![self matchIdentCont]) goto L157;
-    goto L156;
-L157:
-    _index=index154; yythunkpos=yythunkpos155;
+    NSUInteger index203, yythunkpos204;
+L205:
+    index203=_index; yythunkpos204=yythunkpos;
+    if (![self matchIdentCont]) goto L206;
+    goto L205;
+L206:
+    _index=index203; yythunkpos=yythunkpos204;
     yyend = _index;
-    if (![self matchSpacing]) goto L151;
+    if (![self matchSpacing]) goto L200;
     yyprintf((stderr, "  ok   %s", "Identifier"));
     return YES;
-L151:
-    _index=index149; yythunkpos=yythunkpos150;
+L200:
+    _index=index198; yythunkpos=yythunkpos199;
     yyprintf((stderr, "  fail %s", "Identifier"));
     return NO;
 }
 
 - (BOOL) matchLEFTARROW
 {
-    NSUInteger index158=_index, yythunkpos159=yythunkpos;
+    NSUInteger index207=_index, yythunkpos208=yythunkpos;
     yyprintf((stderr, "%s", "LEFTARROW"));
-    if (![self _matchString:"<-"]) goto L160;
-    if (![self matchSpacing]) goto L160;
+    if (![self _matchString:"<-"]) goto L209;
+    if (![self matchSpacing]) goto L209;
     yyprintf((stderr, "  ok   %s", "LEFTARROW"));
     return YES;
-L160:
-    _index=index158; yythunkpos=yythunkpos159;
+L209:
+    _index=index207; yythunkpos=yythunkpos208;
     yyprintf((stderr, "  fail %s", "LEFTARROW"));
     return NO;
 }
 
 - (BOOL) matchLiteral
 {
-    NSUInteger index163=_index, yythunkpos164=yythunkpos;
+    NSUInteger index212=_index, yythunkpos213=yythunkpos;
     yyprintf((stderr, "%s", "Literal"));
-    NSUInteger index166=_index, yythunkpos167=yythunkpos;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L169;
+    NSUInteger index215=_index, yythunkpos216=yythunkpos;
+    if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L218;
     yybegin = _index;
     ;
-    NSUInteger index172, yythunkpos173;
-L174:
-    index172=_index; yythunkpos173=yythunkpos;
-    NSUInteger index178=_index, yythunkpos179=yythunkpos;
-    if ([self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L175;
-    _index=index178; yythunkpos=yythunkpos179;
-    if (![self matchChar]) goto L175;
-    goto L174;
-L175:
-    _index=index172; yythunkpos=yythunkpos173;
+    NSUInteger index221, yythunkpos222;
+L223:
+    index221=_index; yythunkpos222=yythunkpos;
+    NSUInteger index227=_index, yythunkpos228=yythunkpos;
+    if ([self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L224;
+    _index=index227; yythunkpos=yythunkpos228;
+    if (![self matchChar]) goto L224;
+    goto L223;
+L224:
+    _index=index221; yythunkpos=yythunkpos222;
     yyend = _index;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L169;
-    if (![self matchSpacing]) goto L169;
-    goto L168;
-L169:
-    _index=index166; yythunkpos=yythunkpos167;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L165;
+    if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L218;
+    if (![self matchSpacing]) goto L218;
+    goto L217;
+L218:
+    _index=index215; yythunkpos=yythunkpos216;
+    if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L214;
     yybegin = _index;
     ;
-    NSUInteger index182, yythunkpos183;
-L184:
-    index182=_index; yythunkpos183=yythunkpos;
-    NSUInteger index188=_index, yythunkpos189=yythunkpos;
-    if ([self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L185;
-    _index=index188; yythunkpos=yythunkpos189;
-    if (![self matchChar]) goto L185;
-    goto L184;
-L185:
-    _index=index182; yythunkpos=yythunkpos183;
+    NSUInteger index231, yythunkpos232;
+L233:
+    index231=_index; yythunkpos232=yythunkpos;
+    NSUInteger index237=_index, yythunkpos238=yythunkpos;
+    if ([self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L234;
+    _index=index237; yythunkpos=yythunkpos238;
+    if (![self matchChar]) goto L234;
+    goto L233;
+L234:
+    _index=index231; yythunkpos=yythunkpos232;
     yyend = _index;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L165;
-    if (![self matchSpacing]) goto L165;
-    goto L168;
-L168:
+    if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L214;
+    if (![self matchSpacing]) goto L214;
+    goto L217;
+L217:
     yyprintf((stderr, "  ok   %s", "Literal"));
     return YES;
-L165:
-    _index=index163; yythunkpos=yythunkpos164;
+L214:
+    _index=index212; yythunkpos=yythunkpos213;
     yyprintf((stderr, "  fail %s", "Literal"));
     return NO;
 }
 
 - (BOOL) matchNOT
 {
-    NSUInteger index190=_index, yythunkpos191=yythunkpos;
+    NSUInteger index239=_index, yythunkpos240=yythunkpos;
     yyprintf((stderr, "%s", "NOT"));
-    if (![self _matchString:"!"]) goto L192;
-    if (![self matchSpacing]) goto L192;
+    if (![self _matchString:"!"]) goto L241;
+    if (![self matchSpacing]) goto L241;
     yyprintf((stderr, "  ok   %s", "NOT"));
     return YES;
-L192:
-    _index=index190; yythunkpos=yythunkpos191;
+L241:
+    _index=index239; yythunkpos=yythunkpos240;
     yyprintf((stderr, "  fail %s", "NOT"));
     return NO;
 }
 
 - (BOOL) matchOPEN
 {
-    NSUInteger index195=_index, yythunkpos196=yythunkpos;
+    NSUInteger index244=_index, yythunkpos245=yythunkpos;
     yyprintf((stderr, "%s", "OPEN"));
-    if (![self _matchString:"("]) goto L197;
-    if (![self matchSpacing]) goto L197;
+    if (![self _matchString:"("]) goto L246;
+    if (![self matchSpacing]) goto L246;
     yyprintf((stderr, "  ok   %s", "OPEN"));
     return YES;
-L197:
-    _index=index195; yythunkpos=yythunkpos196;
+L246:
+    _index=index244; yythunkpos=yythunkpos245;
     yyprintf((stderr, "  fail %s", "OPEN"));
     return NO;
 }
 
 - (BOOL) matchOPTION
 {
-    NSUInteger index200=_index, yythunkpos201=yythunkpos;
+    NSUInteger index249=_index, yythunkpos250=yythunkpos;
     yyprintf((stderr, "%s", "OPTION"));
-    if (![self _matchString:"@option"]) goto L202;
-    NSUInteger index209=_index, yythunkpos210=yythunkpos;
-    if ([self matchEndOfLine]) goto L202;
-    _index=index209; yythunkpos=yythunkpos210;
-    if (![self matchSpace]) goto L202;
+    if (![self _matchString:"@option"]) goto L251;
+    if (![self matchHorizSpace]) goto L251;
     ;
-    NSUInteger index205, yythunkpos206;
-L211:
-    index205=_index; yythunkpos206=yythunkpos;
-    NSUInteger index215=_index, yythunkpos216=yythunkpos;
-    if ([self matchEndOfLine]) goto L212;
-    _index=index215; yythunkpos=yythunkpos216;
-    if (![self matchSpace]) goto L212;
-    goto L211;
-L212:
-    _index=index205; yythunkpos=yythunkpos206;
+    NSUInteger index254, yythunkpos255;
+L256:
+    index254=_index; yythunkpos255=yythunkpos;
+    if (![self matchHorizSpace]) goto L257;
+    goto L256;
+L257:
+    _index=index254; yythunkpos=yythunkpos255;
     yyprintf((stderr, "  ok   %s", "OPTION"));
     return YES;
-L202:
-    _index=index200; yythunkpos=yythunkpos201;
+L251:
+    _index=index249; yythunkpos=yythunkpos250;
     yyprintf((stderr, "  fail %s", "OPTION"));
-    return NO;
-}
-
-- (BOOL) matchOption
-{
-    NSUInteger index217=_index, yythunkpos218=yythunkpos;
-    yyprintf((stderr, "%s", "Option"));
-    if (![self matchOPTION]) goto L219;
-    if (![self _matchString:"case-insensitive"]) goto L219;
-    ;
-    NSUInteger index222, yythunkpos223;
-L224:
-    index222=_index; yythunkpos223=yythunkpos;
-    NSUInteger index228=_index, yythunkpos229=yythunkpos;
-    if ([self matchEndOfLine]) goto L225;
-    _index=index228; yythunkpos=yythunkpos229;
-    if (![self matchSpace]) goto L225;
-    goto L224;
-L225:
-    _index=index222; yythunkpos=yythunkpos223;
-    if (![self matchEndOfLine]) goto L219;
-    [self yyDo:@selector(yy_1_Option:)];
-    yyprintf((stderr, "  ok   %s", "Option"));
-    return YES;
-L219:
-    _index=index217; yythunkpos=yythunkpos218;
-    yyprintf((stderr, "  fail %s", "Option"));
     return NO;
 }
 
 - (BOOL) matchPLUS
 {
-    NSUInteger index230=_index, yythunkpos231=yythunkpos;
+    NSUInteger index258=_index, yythunkpos259=yythunkpos;
     yyprintf((stderr, "%s", "PLUS"));
-    if (![self _matchString:"+"]) goto L232;
-    if (![self matchSpacing]) goto L232;
+    if (![self _matchString:"+"]) goto L260;
+    if (![self matchSpacing]) goto L260;
     yyprintf((stderr, "  ok   %s", "PLUS"));
     return YES;
-L232:
-    _index=index230; yythunkpos=yythunkpos231;
+L260:
+    _index=index258; yythunkpos=yythunkpos259;
     yyprintf((stderr, "  fail %s", "PLUS"));
+    return NO;
+}
+
+- (BOOL) matchPROPERTY
+{
+    NSUInteger index263=_index, yythunkpos264=yythunkpos;
+    yyprintf((stderr, "%s", "PROPERTY"));
+    if (![self _matchString:"@property"]) goto L265;
+    if (![self matchHorizSpace]) goto L265;
+    ;
+    NSUInteger index268, yythunkpos269;
+L270:
+    index268=_index; yythunkpos269=yythunkpos;
+    if (![self matchHorizSpace]) goto L271;
+    goto L270;
+L271:
+    _index=index268; yythunkpos=yythunkpos269;
+    yyprintf((stderr, "  ok   %s", "PROPERTY"));
+    return YES;
+L265:
+    _index=index263; yythunkpos=yythunkpos264;
+    yyprintf((stderr, "  fail %s", "PROPERTY"));
     return NO;
 }
 
 - (BOOL) matchPrefix
 {
-    NSUInteger index235=_index, yythunkpos236=yythunkpos;
+    NSUInteger index272=_index, yythunkpos273=yythunkpos;
     yyprintf((stderr, "%s", "Prefix"));
-    NSUInteger index238=_index, yythunkpos239=yythunkpos;
-    if (![self matchAND]) goto L241;
-    if (![self matchSuffix]) goto L241;
+    NSUInteger index275=_index, yythunkpos276=yythunkpos;
+    if (![self matchAND]) goto L278;
+    if (![self matchSuffix]) goto L278;
     [self yyDo:@selector(yy_1_Prefix:)];
-    goto L240;
-L241:
-    _index=index238; yythunkpos=yythunkpos239;
-    if (![self matchNOT]) goto L244;
-    if (![self matchSuffix]) goto L244;
+    goto L277;
+L278:
+    _index=index275; yythunkpos=yythunkpos276;
+    if (![self matchNOT]) goto L281;
+    if (![self matchSuffix]) goto L281;
     [self yyDo:@selector(yy_2_Prefix:)];
-    goto L240;
-L244:
-    _index=index238; yythunkpos=yythunkpos239;
-    if (![self matchAND]) goto L247;
-    if (![self matchAction]) goto L247;
+    goto L277;
+L281:
+    _index=index275; yythunkpos=yythunkpos276;
+    if (![self matchAND]) goto L284;
+    if (![self matchAction]) goto L284;
     [self yyDo:@selector(yy_3_Prefix:)];
-    goto L240;
-L247:
-    _index=index238; yythunkpos=yythunkpos239;
-    if (![self matchNOT]) goto L250;
-    if (![self matchAction]) goto L250;
+    goto L277;
+L284:
+    _index=index275; yythunkpos=yythunkpos276;
+    if (![self matchNOT]) goto L287;
+    if (![self matchAction]) goto L287;
     [self yyDo:@selector(yy_4_Prefix:)];
-    goto L240;
-L250:
-    _index=index238; yythunkpos=yythunkpos239;
-    if (![self matchSuffix]) goto L253;
-    goto L240;
-L253:
-    _index=index238; yythunkpos=yythunkpos239;
-    if (![self matchEffect]) goto L237;
-    goto L240;
-L240:
+    goto L277;
+L287:
+    _index=index275; yythunkpos=yythunkpos276;
+    if (![self matchSuffix]) goto L290;
+    goto L277;
+L290:
+    _index=index275; yythunkpos=yythunkpos276;
+    if (![self matchEffect]) goto L274;
+    goto L277;
+L277:
     yyprintf((stderr, "  ok   %s", "Prefix"));
     return YES;
-L237:
-    _index=index235; yythunkpos=yythunkpos236;
+L274:
+    _index=index272; yythunkpos=yythunkpos273;
     yyprintf((stderr, "  fail %s", "Prefix"));
     return NO;
 }
 
 - (BOOL) matchPrimary
 {
-    NSUInteger index254=_index, yythunkpos255=yythunkpos;
+    NSUInteger index291=_index, yythunkpos292=yythunkpos;
     yyprintf((stderr, "%s", "Primary"));
-    NSUInteger index257=_index, yythunkpos258=yythunkpos;
-    if (![self matchIdentifier]) goto L260;
-    NSUInteger index263=_index, yythunkpos264=yythunkpos;
-    if ([self matchLEFTARROW]) goto L260;
-    _index=index263; yythunkpos=yythunkpos264;
+    NSUInteger index294=_index, yythunkpos295=yythunkpos;
+    if (![self matchIdentifier]) goto L297;
+    NSUInteger index300=_index, yythunkpos301=yythunkpos;
+    if ([self matchLEFTARROW]) goto L297;
+    _index=index300; yythunkpos=yythunkpos301;
     [self yyDo:@selector(yy_1_Primary:)];
-    goto L259;
-L260:
-    _index=index257; yythunkpos=yythunkpos258;
-    if (![self matchOPEN]) goto L265;
-    if (![self matchExpression]) goto L265;
-    if (![self matchCLOSE]) goto L265;
-    goto L259;
-L265:
-    _index=index257; yythunkpos=yythunkpos258;
-    if (![self matchLiteral]) goto L268;
+    goto L296;
+L297:
+    _index=index294; yythunkpos=yythunkpos295;
+    if (![self matchOPEN]) goto L302;
+    if (![self matchExpression]) goto L302;
+    if (![self matchCLOSE]) goto L302;
+    goto L296;
+L302:
+    _index=index294; yythunkpos=yythunkpos295;
+    if (![self matchLiteral]) goto L305;
     [self yyDo:@selector(yy_2_Primary:)];
-    goto L259;
-L268:
-    _index=index257; yythunkpos=yythunkpos258;
-    if (![self matchClass]) goto L271;
+    goto L296;
+L305:
+    _index=index294; yythunkpos=yythunkpos295;
+    if (![self matchClass]) goto L308;
     [self yyDo:@selector(yy_3_Primary:)];
-    goto L259;
-L271:
-    _index=index257; yythunkpos=yythunkpos258;
-    if (![self matchDOT]) goto L256;
+    goto L296;
+L308:
+    _index=index294; yythunkpos=yythunkpos295;
+    if (![self matchDOT]) goto L293;
     [self yyDo:@selector(yy_4_Primary:)];
-    goto L259;
-L259:
+    goto L296;
+L296:
     yyprintf((stderr, "  ok   %s", "Primary"));
     return YES;
-L256:
-    _index=index254; yythunkpos=yythunkpos255;
+L293:
+    _index=index291; yythunkpos=yythunkpos292;
     yyprintf((stderr, "  fail %s", "Primary"));
+    return NO;
+}
+
+- (BOOL) matchPropIdentifier
+{
+    NSUInteger index313=_index, yythunkpos314=yythunkpos;
+    yyprintf((stderr, "%s", "PropIdentifier"));
+    yybegin = _index;
+    if (![self matchIdentStart]) goto L315;
+    ;
+    NSUInteger index318, yythunkpos319;
+L320:
+    index318=_index; yythunkpos319=yythunkpos;
+    if (![self matchIdentCont]) goto L321;
+    goto L320;
+L321:
+    _index=index318; yythunkpos=yythunkpos319;
+    yyend = _index;
+    ;
+    NSUInteger index322, yythunkpos323;
+L324:
+    index322=_index; yythunkpos323=yythunkpos;
+    if (![self matchHorizSpace]) goto L325;
+    goto L324;
+L325:
+    _index=index322; yythunkpos=yythunkpos323;
+    yyprintf((stderr, "  ok   %s", "PropIdentifier"));
+    return YES;
+L315:
+    _index=index313; yythunkpos=yythunkpos314;
+    yyprintf((stderr, "  fail %s", "PropIdentifier"));
+    return NO;
+}
+
+- (BOOL) matchPropParamaters
+{
+    NSUInteger index326=_index, yythunkpos327=yythunkpos;
+    yyprintf((stderr, "%s", "PropParamaters"));
+    yybegin = _index;
+    if (![self _matchString:"("]) goto L328;
+    if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\375\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto L328;
+    ;
+    NSUInteger index331, yythunkpos332;
+L333:
+    index331=_index; yythunkpos332=yythunkpos;
+    if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\375\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto L334;
+    goto L333;
+L334:
+    _index=index331; yythunkpos=yythunkpos332;
+    if (![self _matchString:")"]) goto L328;
+    yyend = _index;
+    if (![self matchHorizSpace]) goto L328;
+    ;
+    NSUInteger index335, yythunkpos336;
+L337:
+    index335=_index; yythunkpos336=yythunkpos;
+    if (![self matchHorizSpace]) goto L338;
+    goto L337;
+L338:
+    _index=index335; yythunkpos=yythunkpos336;
+    yyprintf((stderr, "  ok   %s", "PropParamaters"));
+    return YES;
+L328:
+    _index=index326; yythunkpos=yythunkpos327;
+    yyprintf((stderr, "  fail %s", "PropParamaters"));
     return NO;
 }
 
 - (BOOL) matchQUESTION
 {
-    NSUInteger index276=_index, yythunkpos277=yythunkpos;
+    NSUInteger index339=_index, yythunkpos340=yythunkpos;
     yyprintf((stderr, "%s", "QUESTION"));
-    if (![self _matchString:"?"]) goto L278;
-    if (![self matchSpacing]) goto L278;
+    if (![self _matchString:"?"]) goto L341;
+    if (![self matchSpacing]) goto L341;
     yyprintf((stderr, "  ok   %s", "QUESTION"));
     return YES;
-L278:
-    _index=index276; yythunkpos=yythunkpos277;
+L341:
+    _index=index339; yythunkpos=yythunkpos340;
     yyprintf((stderr, "  fail %s", "QUESTION"));
     return NO;
 }
 
 - (BOOL) matchRange
 {
-    NSUInteger index281=_index, yythunkpos282=yythunkpos;
+    NSUInteger index344=_index, yythunkpos345=yythunkpos;
     yyprintf((stderr, "%s", "Range"));
-    NSUInteger index284=_index, yythunkpos285=yythunkpos;
-    if (![self matchChar]) goto L287;
-    if (![self _matchString:"-"]) goto L287;
-    if (![self matchChar]) goto L287;
-    goto L286;
-L287:
-    _index=index284; yythunkpos=yythunkpos285;
-    if (![self matchChar]) goto L283;
-    goto L286;
-L286:
+    NSUInteger index347=_index, yythunkpos348=yythunkpos;
+    if (![self matchChar]) goto L350;
+    if (![self _matchString:"-"]) goto L350;
+    if (![self matchChar]) goto L350;
+    goto L349;
+L350:
+    _index=index347; yythunkpos=yythunkpos348;
+    if (![self matchChar]) goto L346;
+    goto L349;
+L349:
     yyprintf((stderr, "  ok   %s", "Range"));
     return YES;
-L283:
-    _index=index281; yythunkpos=yythunkpos282;
+L346:
+    _index=index344; yythunkpos=yythunkpos345;
     yyprintf((stderr, "  fail %s", "Range"));
     return NO;
 }
 
 - (BOOL) matchSLASH
 {
-    NSUInteger index290=_index, yythunkpos291=yythunkpos;
+    NSUInteger index353=_index, yythunkpos354=yythunkpos;
     yyprintf((stderr, "%s", "SLASH"));
-    if (![self _matchString:"/"]) goto L292;
-    if (![self matchSpacing]) goto L292;
+    if (![self _matchString:"/"]) goto L355;
+    if (![self matchSpacing]) goto L355;
     yyprintf((stderr, "  ok   %s", "SLASH"));
     return YES;
-L292:
-    _index=index290; yythunkpos=yythunkpos291;
+L355:
+    _index=index353; yythunkpos=yythunkpos354;
     yyprintf((stderr, "  fail %s", "SLASH"));
     return NO;
 }
 
 - (BOOL) matchSTAR
 {
-    NSUInteger index295=_index, yythunkpos296=yythunkpos;
+    NSUInteger index358=_index, yythunkpos359=yythunkpos;
     yyprintf((stderr, "%s", "STAR"));
-    if (![self _matchString:"*"]) goto L297;
-    if (![self matchSpacing]) goto L297;
+    if (![self _matchString:"*"]) goto L360;
+    if (![self matchSpacing]) goto L360;
     yyprintf((stderr, "  ok   %s", "STAR"));
     return YES;
-L297:
-    _index=index295; yythunkpos=yythunkpos296;
+L360:
+    _index=index358; yythunkpos=yythunkpos359;
     yyprintf((stderr, "  fail %s", "STAR"));
     return NO;
 }
 
 - (BOOL) matchSequence
 {
-    NSUInteger index300=_index, yythunkpos301=yythunkpos;
+    NSUInteger index363=_index, yythunkpos364=yythunkpos;
     yyprintf((stderr, "%s", "Sequence"));
-    NSUInteger index305=_index, yythunkpos306=yythunkpos;
-    if (![self matchPrefix]) goto L307;
-    goto L308;
-L307:
-    _index=index305; yythunkpos=yythunkpos306;
-L308:
+    NSUInteger index368=_index, yythunkpos369=yythunkpos;
+    if (![self matchPrefix]) goto L370;
+    goto L371;
+L370:
+    _index=index368; yythunkpos=yythunkpos369;
+L371:
     ;
-    NSUInteger index309, yythunkpos310;
-L311:
-    index309=_index; yythunkpos310=yythunkpos;
-    if (![self matchPrefix]) goto L312;
+    NSUInteger index372, yythunkpos373;
+L374:
+    index372=_index; yythunkpos373=yythunkpos;
+    if (![self matchPrefix]) goto L375;
     [self yyDo:@selector(yy_1_Sequence:)];
-    goto L311;
-L312:
-    _index=index309; yythunkpos=yythunkpos310;
+    goto L374;
+L375:
+    _index=index372; yythunkpos=yythunkpos373;
     yyprintf((stderr, "  ok   %s", "Sequence"));
     return YES;
-L302:
-    _index=index300; yythunkpos=yythunkpos301;
+L365:
+    _index=index363; yythunkpos=yythunkpos364;
     yyprintf((stderr, "  fail %s", "Sequence"));
     return NO;
 }
 
 - (BOOL) matchSpace
 {
-    NSUInteger index315=_index, yythunkpos316=yythunkpos;
+    NSUInteger index378=_index, yythunkpos379=yythunkpos;
     yyprintf((stderr, "%s", "Space"));
-    NSUInteger index318=_index, yythunkpos319=yythunkpos;
-    if (![self _matchString:" "]) goto L321;
-    goto L320;
-L321:
-    _index=index318; yythunkpos=yythunkpos319;
-    if (![self _matchString:"\t"]) goto L322;
-    goto L320;
-L322:
-    _index=index318; yythunkpos=yythunkpos319;
-    if (![self matchEndOfLine]) goto L317;
-    goto L320;
-L320:
+    NSUInteger index381=_index, yythunkpos382=yythunkpos;
+    if (![self _matchString:" "]) goto L384;
+    goto L383;
+L384:
+    _index=index381; yythunkpos=yythunkpos382;
+    if (![self _matchString:"\t"]) goto L385;
+    goto L383;
+L385:
+    _index=index381; yythunkpos=yythunkpos382;
+    if (![self matchEndOfLine]) goto L380;
+    goto L383;
+L383:
     yyprintf((stderr, "  ok   %s", "Space"));
     return YES;
-L317:
-    _index=index315; yythunkpos=yythunkpos316;
+L380:
+    _index=index378; yythunkpos=yythunkpos379;
     yyprintf((stderr, "  fail %s", "Space"));
     return NO;
 }
 
 - (BOOL) matchSpacing
 {
-    NSUInteger index323=_index, yythunkpos324=yythunkpos;
+    NSUInteger index386=_index, yythunkpos387=yythunkpos;
     yyprintf((stderr, "%s", "Spacing"));
     ;
-    NSUInteger index326, yythunkpos327;
-L328:
-    index326=_index; yythunkpos327=yythunkpos;
-    NSUInteger index330=_index, yythunkpos331=yythunkpos;
-    if (![self matchSpace]) goto L333;
-    goto L332;
-L333:
-    _index=index330; yythunkpos=yythunkpos331;
-    if (![self matchComment]) goto L329;
-    goto L332;
-L332:
-    goto L328;
-L329:
-    _index=index326; yythunkpos=yythunkpos327;
+    NSUInteger index389, yythunkpos390;
+L391:
+    index389=_index; yythunkpos390=yythunkpos;
+    NSUInteger index393=_index, yythunkpos394=yythunkpos;
+    if (![self matchSpace]) goto L396;
+    goto L395;
+L396:
+    _index=index393; yythunkpos=yythunkpos394;
+    if (![self matchComment]) goto L392;
+    goto L395;
+L395:
+    goto L391;
+L392:
+    _index=index389; yythunkpos=yythunkpos390;
     yyprintf((stderr, "  ok   %s", "Spacing"));
     return YES;
-L325:
-    _index=index323; yythunkpos=yythunkpos324;
+L388:
+    _index=index386; yythunkpos=yythunkpos387;
     yyprintf((stderr, "  fail %s", "Spacing"));
     return NO;
 }
 
 - (BOOL) matchSuffix
 {
-    NSUInteger index334=_index, yythunkpos335=yythunkpos;
+    NSUInteger index397=_index, yythunkpos398=yythunkpos;
     yyprintf((stderr, "%s", "Suffix"));
-    if (![self matchPrimary]) goto L336;
-    NSUInteger index339=_index, yythunkpos340=yythunkpos;
-    NSUInteger index343=_index, yythunkpos344=yythunkpos;
-    if (![self matchQUESTION]) goto L346;
+    if (![self matchPrimary]) goto L399;
+    NSUInteger index402=_index, yythunkpos403=yythunkpos;
+    NSUInteger index406=_index, yythunkpos407=yythunkpos;
+    if (![self matchQUESTION]) goto L409;
     [self yyDo:@selector(yy_1_Suffix:)];
-    goto L345;
-L346:
-    _index=index343; yythunkpos=yythunkpos344;
-    if (![self matchSTAR]) goto L349;
+    goto L408;
+L409:
+    _index=index406; yythunkpos=yythunkpos407;
+    if (![self matchSTAR]) goto L412;
     [self yyDo:@selector(yy_2_Suffix:)];
-    goto L345;
-L349:
-    _index=index343; yythunkpos=yythunkpos344;
-    if (![self matchPLUS]) goto L341;
+    goto L408;
+L412:
+    _index=index406; yythunkpos=yythunkpos407;
+    if (![self matchPLUS]) goto L404;
     [self yyDo:@selector(yy_3_Suffix:)];
-    goto L345;
-L345:
-    goto L342;
-L341:
-    _index=index339; yythunkpos=yythunkpos340;
-L342:
+    goto L408;
+L408:
+    goto L405;
+L404:
+    _index=index402; yythunkpos=yythunkpos403;
+L405:
     yyprintf((stderr, "  ok   %s", "Suffix"));
     return YES;
-L336:
-    _index=index334; yythunkpos=yythunkpos335;
+L399:
+    _index=index397; yythunkpos=yythunkpos398;
     yyprintf((stderr, "  fail %s", "Suffix"));
     return NO;
 }

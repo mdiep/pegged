@@ -19,6 +19,7 @@
 #import "LookAhead.h"
 #import "Node.h"
 #import "Quantifier.h"
+#import "Property.h"
 #import "Rule.h"
 #import "Sequence.h"
 #import "Subrule.h"
@@ -46,9 +47,10 @@ const NSString *__sourceTemplate;
     
     if (self)
     {
-        _stack   = [NSMutableArray new];
-        _rules   = [NSMutableDictionary new];
-        _actions = [NSMutableArray new];
+        _stack      = [NSMutableArray new];
+        _rules      = [NSMutableDictionary new];
+        _actions    = [NSMutableArray new];
+        _properties = [NSMutableArray new];
     }
     
     return self;
@@ -60,6 +62,7 @@ const NSString *__sourceTemplate;
     [_stack release];
     [_rules release];
     [_actions release];
+    [_properties release];
     
     [_className release];
     [_headerPath release];
@@ -89,8 +92,22 @@ const NSString *__sourceTemplate;
     
     NSError *error = nil;
     
+    NSMutableString *properties  = [NSMutableString new];
+    NSMutableString *classes     = [NSMutableString new];
+    NSMutableString *imports     = [NSMutableString new];
+    NSMutableString *synthesizes = [NSMutableString new];
+    NSMutableString *variables   = [NSMutableString new];
+    for (Property *property in _properties)
+    {
+        [properties  appendString:[property property]];
+        [classes     appendString:[property declaration]];
+        [imports     appendString:[property import]];
+        [synthesizes appendString:[property synthesize]];
+        [variables   appendString:[property variable]];
+    }
+    
     // Generate the header
-    NSString *header = [NSString stringWithFormat:(NSString *)__headerTemplate, PREGGERS_VERSION_MAJOR, PREGGERS_VERSION_MINOR, PREGGERS_VERSION_CHANGE, self.className, self.className, self.className, self.className, self.className, self.className, self.className];
+    NSString *header = [NSString stringWithFormat:(NSString *)__headerTemplate, PREGGERS_VERSION_MAJOR, PREGGERS_VERSION_MINOR, PREGGERS_VERSION_CHANGE, classes, self.className, self.className, self.className, self.className, self.className, variables, self.className, properties, self.className];
     [header writeToFile:self.headerPath atomically:NO encoding:NSUTF8StringEncoding error:&error];
     
     // Generate the source
@@ -120,10 +137,16 @@ const NSString *__sourceTemplate;
         [definitions appendString:[rule compile]];
         [definitions appendFormat:@"}\n\n", rule.selectorName];
     }
-    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PREGGERS_VERSION_MAJOR, PREGGERS_VERSION_MINOR, PREGGERS_VERSION_CHANGE, self.className, self.className, declarations, self.className, [self.className uppercaseString], definitions, _startRule.selectorName];
+    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PREGGERS_VERSION_MAJOR, PREGGERS_VERSION_MINOR, PREGGERS_VERSION_CHANGE, self.className, imports, self.className, declarations, self.className, synthesizes, [self.className uppercaseString], definitions, _startRule.selectorName];
     [declarations release];
     [definitions release];
     [source writeToFile:self.sourcePath atomically:NO encoding:NSUTF8StringEncoding error:&error];
+    
+    [properties release];
+    [classes release];
+    [imports release];
+    [synthesizes release];
+    [variables release];
 }
 
 
@@ -333,6 +356,40 @@ const NSString *__sourceTemplate;
 }
 
 
+- (void) parsedPropertyParameters:(NSString *)parameters
+{
+    _propertyParameters = [parameters copy];
+}
+
+
+- (void) parsedPropertyStars:(NSString *)stars
+{
+    _propertyStars = [stars copy];
+}
+
+
+- (void) parsedPropertyType:(NSString *)type
+{
+    _propertyType = [type copy];
+}
+
+
+- (void) parsedPropertyName:(NSString *)name
+{
+    Property *property = [Property new];
+    property.name = name;
+    property.parameters = _propertyParameters;
+    property.stars = _propertyStars;
+    property.type = _propertyType;
+    [_properties addObject:property];
+    [property release];
+    
+    [_propertyParameters release];
+    [_propertyStars release];
+    [_propertyType release];
+}
+
+
 @end
 
 const NSString *__headerTemplate = @"\
@@ -343,7 +400,7 @@ const NSString *__headerTemplate = @"\
 #import <Foundation/Foundation.h>\n\
 \n\
 \n\
-@class Compiler;\n\
+%@\
 \n\
 \n\
 @protocol %@DataSource;\n\
@@ -365,11 +422,11 @@ typedef struct { int begin, end;  SEL action; } yythunk;\n\
     int	yythunkslen;\n\
     int yythunkpos;\n\
 \n\
-    Compiler *_compiler;\n\
+%@\
 }\n\
 \n\
 @property (retain) %@DataSource *dataSource;\n\
-@property (retain) Compiler *compiler;\n\
+%@\
 \n\
 - (BOOL) parse;\n\
 - (BOOL) parseString:(NSString *)string;\n\
@@ -392,7 +449,7 @@ const NSString *__sourceTemplate = @"\
 \n\
 #import \"%@.h\"\n\
 \n\
-#import \"Compiler.h\"\n\
+%@\
 \n\
 @interface %@ ()\n\
 \n\
@@ -406,7 +463,7 @@ const NSString *__sourceTemplate = @"\
 @implementation %@\n\
 \n\
 @synthesize dataSource = _dataSource;\n\
-@synthesize compiler = _compiler;\n\
+%@\
 \n\
 //==================================================================================================\n\
 #pragma mark -\n\

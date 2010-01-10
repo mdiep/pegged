@@ -18,6 +18,11 @@
     Rule *_startRule;
     Rule *_currentRule;
     
+    NSMutableArray *_properties;
+    NSString *_propertyParameters;
+    NSString *_propertyStars;
+    NSString *_propertyType;
+    
     BOOL _caseInsensitive;
     
     NSString *_className;
@@ -54,5 +59,10 @@
 - (void) parsedRule;
 - (void) parsedStar;
 - (void) startRule:(NSString *)name;
+
+- (void) parsedPropertyParameters:(NSString *)parameters;
+- (void) parsedPropertyStars:(NSString *)stars;
+- (void) parsedPropertyType:(NSString *)type;
+- (void) parsedPropertyName:(NSString *)name;
 
 @end

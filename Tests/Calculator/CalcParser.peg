@@ -1,23 +1,24 @@
 
-@option case-insensitive
+@option case-insensitive;
+@property (retain) Calculator *calculator;
 
 Equation <- Primary EndOfFile
 
-Primary <- Secondary ( PLUS  Secondary { [self.compiler add]; }
-                     / MINUS Secondary { [self.compiler subtract]; }
+Primary <- Secondary ( PLUS  Secondary { [self.calculator add]; }
+                     / MINUS Secondary { [self.calculator subtract]; }
                      )*
 
-Secondary <- Tertiary ( MUL Tertiary { [self.compiler multiply]; }
-                      / DIV Tertiary { [self.compiler divide];   }
+Secondary <- Tertiary ( MUL Tertiary { [self.calculator multiply]; }
+                      / DIV Tertiary { [self.calculator divide];   }
                       )*
 
-Tertiary <- Terminal EXP Tertiary { [self.compiler exponent]; }
-          / (PLUS / MINUS { [self.compiler negative]; })+ Tertiary
+Tertiary <- Terminal EXP Tertiary { [self.calculator exponent]; }
+          / (PLUS / MINUS { [self.calculator negative]; })+ Tertiary
           / Terminal
 
 Terminal <- OPEN Primary CLOSE
-          / "pow" OPEN Primary COMMA Primary CLOSE { [self.compiler exponent]; }
-          / Number { [self.compiler pushNumber:text]; }
+          / "pow" OPEN Primary COMMA Primary CLOSE { [self.calculator exponent]; }
+          / Number { [self.calculator pushNumber:text]; }
 
 Number <- < [0-9+] > _
 

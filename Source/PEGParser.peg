@@ -9,10 +9,16 @@
 # [2] http://piumarta.com/software/peg/
 # 
 
-# Hierarchical syntax
-Grammar <- Spacing Option* Spacing Definition+ EndOfFile
+@property (retain) Compiler *compiler;
 
-Option     <- OPTION "case-insensitive" (!EndOfLine Space)* EndOfLine { self.compiler.caseInsensitive = YES; }
+# Hierarchical syntax
+Grammar <- Spacing Declaration* Spacing Definition+ EndOfFile
+
+Declaration <- OPTION "case-insensitive" HorizSpace* EndOfDecl { self.compiler.caseInsensitive = YES; }
+             / PROPERTY (PropParamaters { [self.compiler parsedPropertyParameters:text]; })?
+                        PropIdentifier           { [self.compiler parsedPropertyType:text]; }
+                        < '*'* > HorizSpace*     { [self.compiler parsedPropertyStars:text]; }
+                        PropIdentifier EndOfDecl { [self.compiler parsedPropertyName:text]; }
 
 Definition <- Identifier { [self.compiler startRule:text]; }
                 LEFTARROW Expression { [self.compiler parsedRule]; }
@@ -70,8 +76,14 @@ Space      <- ' ' / '\t' / EndOfLine
 EndOfLine  <- '\r\n' / '\n' / '\r'
 EndOfFile  <- !.
 
-OPTION     <- '@option' (!EndOfLine Space)+
+OPTION     <- '@option' HorizSpace+
+PROPERTY   <- '@property' HorizSpace+
 BEGIN      <- '<' Spacing
 END        <- '>' Spacing
 
 Action     <- '{' < [^}]* > '}' Spacing
+HorizSpace <- ' ' / '\t'
+
+PropIdentifier <- < IdentStart IdentCont* > HorizSpace*
+PropParamaters <- < '(' [^)]+ ')' > HorizSpace+
+EndOfDecl  <- ';' HorizSpace* (EndOfLine / Comment) 

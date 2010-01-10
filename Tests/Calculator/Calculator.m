@@ -1,17 +1,17 @@
 //
-//  Compiler.m
+//  Calculator.m
 //  preggers
 //
 //  Created by Matt Diephouse on 1/1/10.
 //  This code is in the public domain.
 //
 
-#import "Compiler.h"
+#import "Calculator.h"
 
 
 typedef CGFloat (^BinaryOp)(CGFloat left, CGFloat right);
 
-@implementation Compiler
+@implementation Calculator
 
 - (id) init
 {

@@ -30,7 +30,7 @@
 		BE3FF60210EE11040020AEB9 /* Code.m in Sources */ = {isa = PBXBuildFile; fileRef = BE3FF60110EE11040020AEB9 /* Code.m */; };
 		BE3FF77110EE97790020AEB9 /* Quantifier.m in Sources */ = {isa = PBXBuildFile; fileRef = BE3FF77010EE97790020AEB9 /* Quantifier.m */; };
 		BE3FF7DA10EEFF540020AEB9 /* LookAhead.m in Sources */ = {isa = PBXBuildFile; fileRef = BE3FF7D910EEFF540020AEB9 /* LookAhead.m */; };
-		BE3FF92110F0ED0C0020AEB9 /* Compiler.m in Sources */ = {isa = PBXBuildFile; fileRef = BE3FF91610F0E9EA0020AEB9 /* Compiler.m */; };
+		BE3FF92110F0ED0C0020AEB9 /* Calculator.m in Sources */ = {isa = PBXBuildFile; fileRef = BE3FF91610F0E9EA0020AEB9 /* Calculator.m */; };
 		BE3FF93110F0EDAF0020AEB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		BE3FF9B810F0EE8D0020AEB9 /* CalcParser.peg in Sources */ = {isa = PBXBuildFile; fileRef = BE3FF91410F0E9EA0020AEB9 /* CalcParser.peg */; };
 		BE3FF9C310F0EF8E0020AEB9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BE3FF9C210F0EF8E0020AEB9 /* main.m */; };
@@ -38,6 +38,7 @@
 		BE94313E10F8317100FA4E0A /* EvenParser.peg in Sources */ = {isa = PBXBuildFile; fileRef = BEDCAA0A10F82865003C0737 /* EvenParser.peg */; };
 		BE94314010F8317800FA4E0A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BEDCAA2010F8291A003C0737 /* main.m */; };
 		BE9431E310F919F400FA4E0A /* Version.m in Sources */ = {isa = PBXBuildFile; fileRef = BE9431E210F919F400FA4E0A /* Version.m */; };
+		BE94329B10FA6A0500FA4E0A /* Property.m in Sources */ = {isa = PBXBuildFile; fileRef = BE94329A10FA6A0500FA4E0A /* Property.m */; };
 		BE962FE010E97DA3007629F6 /* Rule.m in Sources */ = {isa = PBXBuildFile; fileRef = BE962FDF10E97DA3007629F6 /* Rule.m */; };
 		BE962FF110EAE33D007629F6 /* Node.m in Sources */ = {isa = PBXBuildFile; fileRef = BE962FF010EAE33D007629F6 /* Node.m */; };
 		BE96300110EAE499007629F6 /* Sequence.m in Sources */ = {isa = PBXBuildFile; fileRef = BE96300010EAE499007629F6 /* Sequence.m */; };
@@ -138,13 +139,15 @@
 		BE3FF7D810EEFF540020AEB9 /* LookAhead.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LookAhead.h; sourceTree = "<group>"; };
 		BE3FF7D910EEFF540020AEB9 /* LookAhead.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LookAhead.m; sourceTree = "<group>"; };
 		BE3FF91410F0E9EA0020AEB9 /* CalcParser.peg */ = {isa = PBXFileReference; explicitFileType = sourcecode; fileEncoding = 4; path = CalcParser.peg; sourceTree = "<group>"; };
-		BE3FF91510F0E9EA0020AEB9 /* Compiler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Compiler.h; sourceTree = "<group>"; };
-		BE3FF91610F0E9EA0020AEB9 /* Compiler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Compiler.m; sourceTree = "<group>"; };
+		BE3FF91510F0E9EA0020AEB9 /* Calculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Calculator.h; sourceTree = "<group>"; };
+		BE3FF91610F0E9EA0020AEB9 /* Calculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Calculator.m; sourceTree = "<group>"; };
 		BE3FF91D10F0ECF90020AEB9 /* Calculator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Calculator; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE3FF9C210F0EF8E0020AEB9 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		BE94313A10F8315100FA4E0A /* EvenStrings */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = EvenStrings; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE9431E110F919F400FA4E0A /* Version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Version.h; sourceTree = "<group>"; };
 		BE9431E210F919F400FA4E0A /* Version.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Version.m; sourceTree = "<group>"; };
+		BE94329910FA6A0500FA4E0A /* Property.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Property.h; sourceTree = "<group>"; };
+		BE94329A10FA6A0500FA4E0A /* Property.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Property.m; sourceTree = "<group>"; };
 		BE962FDE10E97DA3007629F6 /* Rule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Rule.h; sourceTree = "<group>"; };
 		BE962FDF10E97DA3007629F6 /* Rule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Rule.m; sourceTree = "<group>"; };
 		BE962FEF10EAE33D007629F6 /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
@@ -255,6 +258,8 @@
 				BE96300010EAE499007629F6 /* Sequence.m */,
 				BE9431E110F919F400FA4E0A /* Version.h */,
 				BE9431E210F919F400FA4E0A /* Version.m */,
+				BE94329910FA6A0500FA4E0A /* Property.h */,
+				BE94329A10FA6A0500FA4E0A /* Property.m */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -290,8 +295,8 @@
 			isa = PBXGroup;
 			children = (
 				BE3FF91410F0E9EA0020AEB9 /* CalcParser.peg */,
-				BE3FF91510F0E9EA0020AEB9 /* Compiler.h */,
-				BE3FF91610F0E9EA0020AEB9 /* Compiler.m */,
+				BE3FF91510F0E9EA0020AEB9 /* Calculator.h */,
+				BE3FF91610F0E9EA0020AEB9 /* Calculator.m */,
 				BE3FF9C210F0EF8E0020AEB9 /* main.m */,
 				BEDCA7C510F145CE003C0737 /* equations.txt */,
 			);
@@ -447,6 +452,7 @@
 				BE3FF7DA10EEFF540020AEB9 /* LookAhead.m in Sources */,
 				BEDCAA2810F82C46003C0737 /* Condition.m in Sources */,
 				BE9431E310F919F400FA4E0A /* Version.m in Sources */,
+				BE94329B10FA6A0500FA4E0A /* Property.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -455,7 +461,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BE3FF9B810F0EE8D0020AEB9 /* CalcParser.peg in Sources */,
-				BE3FF92110F0ED0C0020AEB9 /* Compiler.m in Sources */,
+				BE3FF92110F0ED0C0020AEB9 /* Calculator.m in Sources */,
 				BE3FF9C310F0EF8E0020AEB9 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

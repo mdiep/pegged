@@ -1,5 +1,5 @@
 //
-//  Compiler.h
+//  Calculator.h
 //  preggers
 //
 //  Created by Matt Diephouse on 1/1/10.
@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 
 
-@interface Compiler : NSObject
+@interface Calculator : NSObject
 {
     NSNumberFormatter *_formatter;
     NSMutableArray *_stack;
