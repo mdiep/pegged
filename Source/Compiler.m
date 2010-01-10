@@ -417,7 +417,6 @@ const NSString *__sourceTemplate = @"\
 #include <stdio.h>\n\
 #include <stdlib.h>\n\
 #include <string.h>\n\
-#define YYRULECOUNT 32\n\
 \n\
 #ifdef matchDEBUG\n\
 #define yyprintf(args)	{ fprintf args; fprintf(stderr,\" @ %%s\\n\",[[_string substringFromIndex:_index] UTF8String]); }\n\
