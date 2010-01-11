@@ -41,7 +41,7 @@ Provided here is a simple example: a basic calculator.
 
 	@property (retain) Calculator *calculator;
 	
-	Equation <- Primary EndOfFile
+	Equation <- Sum EndOfFile
 	
 	Sum <- Product ( PLUS  Product { [self.calculator add]; }
 	               / MINUS Product { [self.calculator subtract]; }
