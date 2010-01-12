@@ -68,7 +68,7 @@
     [code appendString:[self.definition compile:failLabel]];
     [code appendFormat:@"    yyprintf((stderr, \"  ok   %%s\", \"%@\"));\n", self.name];
     [code appendFormat:@"    return YES;\n"];
-    [code appendFormat:@"%@:\n", failLabel];
+    [code appendFormat:@"%@:;\n", failLabel];
     [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
     [code appendFormat:@"    yyprintf((stderr, \"  fail %%s\", \"%@\"));\n", self.name];
     [code appendFormat:@"    return NO;\n"];

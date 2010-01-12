@@ -65,7 +65,7 @@
     if (self.inverted)
     {
         [code appendFormat:@"    goto %@;\n", failLabel];
-        [code appendFormat:@"%@:\n", label];
+        [code appendFormat:@"%@:;\n", label];
         [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
     }
     

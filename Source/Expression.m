@@ -66,7 +66,7 @@
     {
         if (next)
         {
-            [code appendFormat:@"%@:\n", next];
+            [code appendFormat:@"%@:;\n", next];
             [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
         }
         next = node == [self.nodes lastObject] ? label : [[Compiler class] unique:@"L"];
@@ -74,12 +74,12 @@
         [code appendFormat:@"    goto %@;\n", success];
     }
     
-    [code appendFormat:@"%@:\n", success];
+    [code appendFormat:@"%@:;\n", success];
     
     if (self.inverted)
     {
         [code appendFormat:@"    goto %@;\n", failLabel];
-        [code appendFormat:@"%@:\n", label];
+        [code appendFormat:@"%@:;\n", label];
         [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
     }
     

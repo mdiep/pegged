@@ -44,13 +44,12 @@
     {
         NSString *loop = [[Compiler class] unique:@"L"];
         NSString *exit = [[Compiler class] unique:@"L"];
-        [code appendFormat:@"    ;\n"];
         [code appendFormat:@"    NSUInteger %@, %@;\n", index, thunkpos];
-        [code appendFormat:@"%@:\n", loop];
+        [code appendFormat:@"%@:;\n", loop];
         [code appendFormat:@"    %@=_index; %@=yythunkpos;\n", index, thunkpos];
         [code appendString:[self.node compile:exit]];
         [code appendFormat:@"    goto %@;\n", loop];
-        [code appendFormat:@"%@:\n", exit];
+        [code appendFormat:@"%@:;\n", exit];
         [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
     }
     else if (self.optional)
@@ -60,9 +59,9 @@
         [code appendFormat:@"    NSUInteger %@=_index, %@=yythunkpos;\n", index, thunkpos];
         [code appendString:[self.node compile:failure]];
         [code appendFormat:@"    goto %@;\n", success];
-        [code appendFormat:@"%@:\n", failure];
+        [code appendFormat:@"%@:;\n", failure];
         [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
-        [code appendFormat:@"%@:\n", success];
+        [code appendFormat:@"%@:;\n", success];
     }
     else if (self.repeats)
     {
@@ -70,13 +69,12 @@
         
         NSString *loop = [[Compiler class] unique:@"L"];
         NSString *exit = [[Compiler class] unique:@"L"];
-        [code appendFormat:@"    ;\n"];
         [code appendFormat:@"    NSUInteger %@, %@;\n", index, thunkpos];
-        [code appendFormat:@"%@:\n", loop];
+        [code appendFormat:@"%@:;\n", loop];
         [code appendFormat:@"    %@=_index; %@=yythunkpos;\n", index, thunkpos];
         [code appendString:[self.node compile:exit]];
         [code appendFormat:@"    goto %@;\n", loop];
-        [code appendFormat:@"%@:\n", exit];
+        [code appendFormat:@"%@:;\n", exit];
         [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
     }
     else
