@@ -20,7 +20,7 @@ Terminal <- OPEN Primary CLOSE
           / "pow" OPEN Primary COMMA Primary CLOSE { [self.calculator exponent]; }
           / Number { [self.calculator pushNumber:text]; }
 
-Number <- < [0-9+] > _
+Number <- < [\x30-\x39]+ > _
 
 OPEN      <- '(' _
 CLOSE     <- ')' _

@@ -26,6 +26,14 @@ static void setbits(unsigned char bitset[], const char *cstring, BOOL negative)
     int c, prev=-1;
     while ((c= *cstring++))
     {
+        if ('\\' == c && 'x' == *cstring)
+        {
+            char buffer[8];
+            sscanf(++cstring, "%x", &c);
+            sprintf(buffer, "%x", c);
+            cstring += strlen(buffer);
+        }
+        
         if ('-' == c && *cstring && prev >= 0)
         {
             for (c= *cstring++;  prev <= c;  ++prev)
