@@ -10,54 +10,72 @@
 
 #include <stdlib.h>
 
-static void setbit(unsigned char bitset[], int c, BOOL negative)
+static void setbit(unsigned char bitset[], int c, BOOL caseInsensitive, BOOL negative)
 {
+    if (caseInsensitive)
+    {
+        if (islower(c))
+            setbit(bitset, toupper(c), NO, negative);
+        else if (isupper(c))
+            setbit(bitset, tolower(c), NO, negative);
+    }
+    
     if (negative)
         bitset[c >> 3] &= ~(1 << (c & 7));
     else
         bitset[c >> 3] |=  (1 << (c & 7));
 }
 
-static void setbits(unsigned char bitset[], const char *cstring, BOOL negative)
+static int nextchar(const char **cstring)
+{
+    int c = *(*cstring)++;
+    
+    if ('\\' == c && 'x' == **cstring)
+    {
+        ++*cstring;
+        char buffer[3] = "\0\0\0";
+        if (isxdigit(**cstring))
+            buffer[0] = *(*cstring)++;
+        if (isxdigit(**cstring))
+            buffer[1] = *(*cstring)++;
+        sscanf(buffer, "%x", &c);
+    }
+    else if ('\\' == c && **cstring)
+    {
+        switch (c = *(*cstring)++)
+        {
+            case 'a': c = '\a'; break;	/* bel */
+            case 'b': c = '\b'; break;	/* bs */
+            case 'e': c = '\e'; break;	/* esc */
+            case 'f': c = '\f'; break;	/* ff */
+            case 'n': c = '\n'; break;	/* nl */
+            case 'r': c = '\r'; break;	/* cr */
+            case 't': c = '\t'; break;	/* ht */
+            case 'v': c = '\v'; break;	/* vt */
+            default:		break;
+        }
+    }
+    
+    return c;
+}
+
+static void setbits(unsigned char bitset[], const char *cstring, BOOL caseInsensitive, BOOL negative)
 {
     if (negative)
         cstring++;
     
-    int c, prev=-1;
-    while ((c= *cstring++))
+    int prev=-1;
+    while (*cstring)
     {
-        if ('\\' == c && 'x' == *cstring)
-        {
-            char buffer[8];
-            sscanf(++cstring, "%x", &c);
-            sprintf(buffer, "%x", c);
-            cstring += strlen(buffer);
-        }
-        
+        int c = nextchar(&cstring);
         if ('-' == c && *cstring && prev >= 0)
         {
-            for (c= *cstring++;  prev <= c;  ++prev)
-                setbit(bitset, prev, negative);
+            for (c = nextchar(&cstring); prev <= c; ++prev)
+                setbit(bitset, prev, caseInsensitive, negative);
             prev = -1;
         }
-        else if ('\\' == c && *cstring)
-        {
-            switch (c = *cstring++)
-            {
-                case 'a':  c= '\a'; break;	/* bel */
-                case 'b':  c= '\b'; break;	/* bs */
-                case 'e':  c= '\e'; break;	/* esc */
-                case 'f':  c= '\f'; break;	/* ff */
-                case 'n':  c= '\n'; break;	/* nl */
-                case 'r':  c= '\r'; break;	/* cr */
-                case 't':  c= '\t'; break;	/* ht */
-                case 'v':  c= '\v'; break;	/* vt */
-                default:		break;
-            }
-            setbit(bitset, prev=c, negative);
-        }
         else
-            setbit(bitset, prev=c, negative);
+            setbit(bitset, prev=c, caseInsensitive, negative);
     }
 }
 
@@ -95,14 +113,7 @@ static void setbits(unsigned char bitset[], const char *cstring, BOOL negative)
         unsigned char bitset[32];
         memset(bitset, negative ? 255 : 0, 32);
         
-        if (self.caseInsensitive)
-        {
-            setbits(bitset, [[_string lowercaseString] UTF8String], negative);
-            setbits(bitset, [[_string uppercaseString] UTF8String], negative);
-        }
-        else
-            setbits(bitset, cstring, negative);
-            
+        setbits(bitset, cstring, self.caseInsensitive, negative);
         
         char string[256];
         char *ptr = string;
