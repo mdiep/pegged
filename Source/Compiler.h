@@ -47,6 +47,7 @@
 - (void) parsedAction:(NSString *)code;
 - (void) parsedAlternate;
 - (void) parsedClass:(NSString *)class;
+- (void) parsedCode:(NSString *)code;
 - (void) parsedDot;
 - (void) parsedIdentifier:(NSString *)identifier;
 - (void) parsedLiteral:(NSString *)literal;

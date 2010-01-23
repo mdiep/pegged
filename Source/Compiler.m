@@ -226,6 +226,12 @@ const NSString *__sourceTemplate;
 }
 
 
+- (void) parsedCode:(NSString *)code
+{
+    [_stack addObject:[Code codeWithString:code]];
+}
+
+
 - (void) parsedDot
 {
     [_stack addObject:[Dot node]];

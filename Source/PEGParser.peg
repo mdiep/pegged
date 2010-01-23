@@ -41,7 +41,8 @@ Primary    <- Identifier !LEFTARROW { [self.compiler parsedIdentifier:text]; }
             / Class     { [self.compiler parsedClass:text]; }
             / DOT       { [self.compiler parsedDot]; }
 
-Effect     <- Action    { [self.compiler parsedAction:text]; }
+Effect     <- Code      { [self.compiler parsedCode:text]; }
+            / Action    { [self.compiler parsedAction:text]; }
             / BEGIN     { [self.compiler beginCapture]; }
             / END       { [self.compiler endCapture]; }
 
@@ -82,6 +83,7 @@ PROPERTY   <- '@property' HorizSpace+
 BEGIN      <- '<' Spacing
 END        <- '>' Spacing
 
+Code       <- '{{' < [^}]* > '}}' Spacing
 Action     <- '{' < [^}]* > '}' Spacing
 HorizSpace <- ' ' / '\t'
 
