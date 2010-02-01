@@ -420,7 +420,6 @@ typedef struct { int begin, end;  SEL action; } yythunk;\n\
     NSString *_string;\n\
     NSUInteger _index;\n\
     NSUInteger _limit;\n\
-    NSString *_text;\n\
 \n\
     int	yybegin;\n\
     int	yyend;\n\
@@ -562,19 +561,12 @@ const NSString *__sourceTemplate = @"\
     ++yythunkpos;\n\
 }\n\
 \n\
-- (void) yyText:(int)begin to:(int)end\n\
+- (NSString *) yyText:(int)begin to:(int)end\n\
 {\n\
     int len = end - begin;\n\
-    if (len <= 0)\n\
-    {\n\
-        [_text release];\n\
-        _text = nil;\n\
-    }\n\
-    else\n\
-    {\n\
-        _text = [_string substringWithRange:NSMakeRange(begin, end-begin)];\n\
-        [_text retain];\n\
-    }\n\
+    if (len > 0)\n\
+        return [_string substringWithRange:NSMakeRange(begin, len)];\n\
+    return nil;\n\
 }\n\
 \n\
 - (void) yyDone\n\
@@ -583,9 +575,9 @@ const NSString *__sourceTemplate = @"\
     for (pos= 0;  pos < yythunkpos;  ++pos)\n\
     {\n\
         yythunk *thunk= &yythunks[pos];\n\
-        [self yyText:thunk->begin to:thunk->end];\n\
-        yyprintf((stderr, \"DO [%%d] %%s %%s\\n\", pos, [NSStringFromSelector(thunk->action) UTF8String], [_text UTF8String]));\n\
-        [self performSelector:thunk->action withObject:_text];\n\
+        NSString *text = [self yyText:thunk->begin to:thunk->end];\n\
+        yyprintf((stderr, \"DO [%%d] %%s %%s\\n\", pos, [NSStringFromSelector(thunk->action) UTF8String], [text UTF8String]));\n\
+        [self performSelector:thunk->action withObject:text];\n\
     }\n\
     yythunkpos= 0;\n\
 }\n\
@@ -633,8 +625,6 @@ const NSString *__sourceTemplate = @"\
 \n\
     [_string release];\n\
     _string = nil;\n\
-    [_text release];\n\
-    _text = nil;\n\
 \n\
     return yyok;\n\
 }\n\
