@@ -564,9 +564,9 @@ const NSString *__sourceTemplate = @"\
 - (NSString *) yyText:(int)begin to:(int)end\n\
 {\n\
     int len = end - begin;\n\
-    if (len > 0)\n\
-        return [_string substringWithRange:NSMakeRange(begin, len)];\n\
-    return nil;\n\
+    if (len <= 0)\n\
+        return @\"\";\n\
+    return [_string substringWithRange:NSMakeRange(begin, len)];\n\
 }\n\
 \n\
 - (void) yyDone\n\
