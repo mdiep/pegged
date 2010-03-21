@@ -179,13 +179,13 @@ const NSString *__sourceTemplate;
 
 - (void) beginCapture
 {
-    [_stack addObject:[Code codeWithString:@"yybegin = _index"]];
+    [_stack addObject:[Code codeWithString:@"if (_capturing) yybegin = _index"]];
 }
 
 
 - (void) endCapture
 {
-    [_stack addObject:[Code codeWithString:@"yyend = _index"]];
+    [_stack addObject:[Code codeWithString:@"if (_capturing) yyend = _index"]];
 }
 
 
@@ -423,6 +423,7 @@ typedef struct { int begin, end;  SEL action; } yythunk;\n\
 \n\
     int	yybegin;\n\
     int	yyend;\n\
+    BOOL _capturing;\n\
     yythunk *yythunks;\n\
     int	yythunkslen;\n\
     int yythunkpos;\n\
@@ -613,6 +614,7 @@ const NSString *__sourceTemplate = @"\
     }\n\
     yybegin= yyend= _index;\n\
     yythunkpos= 0;\n\
+    _capturing = YES;\n\
 \n\
     NSMethodSignature *sig = [[self class] instanceMethodSignatureForSelector:startRule];\n\
     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:sig];\n\

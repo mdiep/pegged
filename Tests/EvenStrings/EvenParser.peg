@@ -1,3 +1,3 @@
 
-String <-  < 'a'+ >  &{ (yyend-yybegin)%2 == 0 }  !.
+String <-  < 'a'+ !(<'b'>) >  &{ (yyend-yybegin)%2 == 0 }  !.
         /  < 'b'+ >  !{ (yyend-yybegin)%2 == 1 }  !.

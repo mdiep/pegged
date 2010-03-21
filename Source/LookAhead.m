@@ -35,12 +35,24 @@
 {
     NSMutableString *code = [NSMutableString string];
     
-    NSString *index     = [[Compiler class] unique:@"index"];
-    NSString *thunkpos  = [[Compiler class] unique:@"yythunkpos"];
+    NSString *index        = [[Compiler class] unique:@"index"];
+    NSString *thunkpos     = [[Compiler class] unique:@"yythunkpos"];
+    NSString *newFailLabel = [[Compiler class] unique:@"L"];
+    NSString *capturing    = [[Compiler class] unique:@"capturing"];
+    NSString *success      = [[Compiler class] unique:@"L"];
     
     [code appendFormat:@"    NSUInteger %@=_index, %@=yythunkpos;\n", index, thunkpos];
-    [code appendString:[self.node compile:failLabel]];
+    [code appendFormat:@"    BOOL %@ = _capturing; _capturing=NO;\n", capturing];
+    [code appendString:[self.node compile:newFailLabel]];
     [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
+    [code appendFormat:@"    _capturing = %@;\n", capturing];
+    [code appendFormat:@"    goto %@;", success];
+    
+    [code appendFormat:@"%@:\n", newFailLabel];
+    [code appendFormat:@"    _capturing = %@;\n", capturing];
+    [code appendFormat:@"    goto %@;", failLabel];
+
+    [code appendFormat:@"%@:\n", success];
     
     return code;
 }
