@@ -46,13 +46,13 @@
     [code appendString:[self.node compile:newFailLabel]];
     [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
     [code appendFormat:@"    _capturing = %@;\n", capturing];
-    [code appendFormat:@"    goto %@;", success];
+    [code appendFormat:@"    goto %@;\n", success];
     
-    [code appendFormat:@"%@:\n", newFailLabel];
+    [code appendFormat:@"%@:;\n", newFailLabel];
     [code appendFormat:@"    _capturing = %@;\n", capturing];
-    [code appendFormat:@"    goto %@;", failLabel];
+    [code appendFormat:@"    goto %@;\n", failLabel];
 
-    [code appendFormat:@"%@:\n", success];
+    [code appendFormat:@"%@:;\n", success];
     
     return code;
 }
