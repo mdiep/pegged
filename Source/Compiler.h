@@ -1,6 +1,6 @@
 //
 //  Compiler.h
-//  preggers
+//  pegged
 //
 //  Created by Matt Diephouse on 12/18/09.
 //  This code is in the public domain.

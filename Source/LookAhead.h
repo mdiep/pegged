@@ -1,6 +1,6 @@
 //
 //  LookAhead.h
-//  preggers
+//  pegged
 //
 //  Created by Matt Diephouse on 1/1/10.
 //  This code is in the public domain.

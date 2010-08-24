@@ -1,17 +1,17 @@
 
-preggers is a tool for generating Objective-C recursive-decent parsers from Parsing Expression Grammars (PEGs).
+pegged is a tool for generating Objective-C recursive-decent parsers from Parsing Expression Grammars (PEGs).
 
 This code, along with the code it generates, is in the public domain.
 
 = SYNOPSIS
 
-	preggers [--version] [--help] [--output-dir directory] file
+	pegged [--version] [--help] [--output-dir directory] file
 
 = DESCRIPTION
 
-preggers generates Objective-C parsers from PEG grammars. The parsers it generates are re-entrant, thread-safe, and do not leak memory: they are suitable for inclusion in other programs.
+pegged generates Objective-C parsers from PEG grammars. The parsers it generates are re-entrant, thread-safe, and do not leak memory: they are suitable for inclusion in other programs.
 
-preggers reads the grammar specified in file and will create a class of the same name. A .h and a .m file will then be created in the output directory, which may be specified from the command line and defaults to the directory containing the PEG grammar. The parser class adheres to a simple interface:
+pegged reads the grammar specified in file and will create a class of the same name. A .h and a .m file will then be created in the output directory, which may be specified from the command line and defaults to the directory containing the PEG grammar. The parser class adheres to a simple interface:
 
 	@protocol ParserDataSource;
 	typedef NSObject<ParserDataSource> ParserDataSource;

@@ -1,6 +1,6 @@
 //
-//  preggers.m
-//  preggers
+//  pegged.m
+//  pegged
 //
 //  Created by Matt Diephouse on 12/17/09.
 //  This code is in the public domain.
@@ -15,7 +15,7 @@
 #include <getopt.h>
 
 static const char *usage_string =
-"preggers [--version] [--help] [--output-dir dir] [-d dir] file\n";
+"pegged [--version] [--help] [--output-dir dir] [-d dir] file\n";
 
 static int opt_version;
 static int opt_help;
@@ -42,10 +42,10 @@ int main (int argc, char *argv[])
             case 0:
                 if (opt_version)
                 {
-                    printf("preggers version %u.%u.%u\n",
-                           (unsigned int)PREGGERS_VERSION_MAJOR,
-                           (unsigned int)PREGGERS_VERSION_MINOR,
-                           (unsigned int)PREGGERS_VERSION_CHANGE);
+                    printf("pegged version %u.%u.%u\n",
+                           (unsigned int)PEGGED_VERSION_MAJOR,
+                           (unsigned int)PEGGED_VERSION_MINOR,
+                           (unsigned int)PEGGED_VERSION_CHANGE);
                     return 0;
                 }
                 else if (opt_help)
