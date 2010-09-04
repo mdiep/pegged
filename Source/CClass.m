@@ -121,7 +121,7 @@ static void setbits(unsigned char bitset[], const char *cstring, BOOL caseInsens
             ptr += sprintf(ptr, "\\%03o", bitset[c]);
         _repr = [NSString stringWithUTF8String:string];
     }
-    return [NSString stringWithFormat:@"[self _matchClass:(unsigned char *)\"%@\"]", _repr];
+    return [NSString stringWithFormat:@"[parser matchClass:(unsigned char *)\"%@\"]", _repr];
 }
 
 

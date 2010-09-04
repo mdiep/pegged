@@ -24,13 +24,12 @@
 @property (readonly) BOOL defined;
 @property (assign) BOOL used;
 
-@property (readonly) NSString *selectorName;
 @property (retain) Node *definition;
 
 + (id) ruleWithName:(NSString*)name;
 - (id) initWithName:(NSString*)name;
 
-- (NSString *) compile;
+- (NSString *) compile:(NSString *)parserClassName;
 - (NSString *) nextActionSelectorName;
 
 @end

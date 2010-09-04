@@ -18,7 +18,7 @@
 
 + (id) node;
 
-- (NSString *) compile:(NSString *)failLabel;
+- (NSString *) compile:(NSString *)parserClassName;
 - (void) invert;
 
 @end

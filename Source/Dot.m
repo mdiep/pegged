@@ -18,7 +18,7 @@
 
 - (NSString *) condition
 {
-    return @"[self _matchDot]";
+    return @"[parser matchDot]";
 }
 
 @end

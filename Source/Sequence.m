@@ -45,28 +45,21 @@
 #pragma mark Node Methods
 //==================================================================================================
 
-- (NSString *) compile:(NSString *)failLabel
+- (NSString *) compile:(NSString *)parserClassName
 {
     NSMutableString *code = [NSMutableString string];
     
-    NSString *index     = [[Compiler class] unique:@"index"];
-    NSString *thunkpos  = [[Compiler class] unique:@"yythunkpos"];
-    NSString *label     = failLabel;
-    
     if (self.inverted)
     {
-        [code appendFormat:@"    NSUInteger %@=_index, %@=yythunkpos;\n", index, thunkpos];
-        label = [[Compiler class] unique:@"L"];
+        [code appendFormat:@"    [parser invert:^(%@ *parser){\n"];
     }
     
     for (Node *node in self.nodes)
-        [code appendString:[node compile:label]];
+        [code appendString:[node compile:parserClassName]];
     
     if (self.inverted)
     {
-        [code appendFormat:@"    goto %@;\n", failLabel];
-        [code appendFormat:@"%@:;\n", label];
-        [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
+        [code appendString:@"    }];\n"];
     }
     
     return code;

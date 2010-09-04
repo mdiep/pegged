@@ -45,43 +45,22 @@
 #pragma mark Node Methods
 //==================================================================================================
 
-- (NSString *) compile:(NSString *)failLabel
+- (NSString *) compile:(NSString *)parserClassName
 {
-    // add support for quantifiers
     NSMutableString *code = [NSMutableString string];
     
-    NSString *index    = [[Compiler class] unique:@"index"];
-    NSString *thunkpos = [[Compiler class] unique:@"yythunkpos"];
-    NSString *success  = [[Compiler class] unique:@"L"];
-    NSString *label     = failLabel;
+    NSString *selector = self.inverted ? @"invert" : @"matchOne";
     
-    if (self.inverted)
-    {
-        label = [[Compiler class] unique:@"L"];
-    }
-    
-    NSString *next     = nil;
-    [code appendFormat:@"    NSUInteger %@=_index, %@=yythunkpos;\n", index, thunkpos];
+    [code appendFormat:@"    if (![parser %@:^(%@ *parser){\n", selector, parserClassName];
     for (Node *node in self.nodes)
     {
-        if (next)
-        {
-            [code appendFormat:@"%@:;\n", next];
-            [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
-        }
-        next = node == [self.nodes lastObject] ? label : [[Compiler class] unique:@"L"];
-        [code appendString:[node compile:next]];
-        [code appendFormat:@"    goto %@;\n", success];
+        [code appendFormat:@"    if ([parser matchOne:^(%@ *parser){\n", parserClassName];
+        [code appendString:[node compile:parserClassName]];
+        [code appendString:@"    return YES;"];
+        [code appendString:@"    }]) return YES;\n"];
     }
-    
-    [code appendFormat:@"%@:;\n", success];
-    
-    if (self.inverted)
-    {
-        [code appendFormat:@"    goto %@;\n", failLabel];
-        [code appendFormat:@"%@:;\n", label];
-        [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
-    }
+    [code appendString:@"    return NO;"];
+    [code appendString:@"    }]) return NO;\n"];
     
     return code;
 }

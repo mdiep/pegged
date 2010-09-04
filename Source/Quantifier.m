@@ -33,52 +33,34 @@
 #pragma mark Node Methods
 //==================================================================================================
 
-- (NSString *) compile:(NSString *)failLabel
+- (NSString *) compile:(NSString *)parserClassName
 {
     NSMutableString *code = [NSMutableString string];
     
-    NSString *index     = [[Compiler class] unique:@"index"];
-    NSString *thunkpos  = [[Compiler class] unique:@"yythunkpos"];
+    NSString *selector = self.repeats ? @"matchMany" : @"matchOne";
     
-    if (self.optional && self.repeats)
+    if (self.optional)
     {
-        NSString *loop = [[Compiler class] unique:@"L"];
-        NSString *exit = [[Compiler class] unique:@"L"];
-        [code appendFormat:@"    NSUInteger %@, %@;\n", index, thunkpos];
-        [code appendFormat:@"%@:;\n", loop];
-        [code appendFormat:@"    %@=_index; %@=yythunkpos;\n", index, thunkpos];
-        [code appendString:[self.node compile:exit]];
-        [code appendFormat:@"    goto %@;\n", loop];
-        [code appendFormat:@"%@:;\n", exit];
-        [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
-    }
-    else if (self.optional)
-    {
-        NSString *failure = [[Compiler class] unique:@"L"];
-        NSString *success = [[Compiler class] unique:@"L"];
-        [code appendFormat:@"    NSUInteger %@=_index, %@=yythunkpos;\n", index, thunkpos];
-        [code appendString:[self.node compile:failure]];
-        [code appendFormat:@"    goto %@;\n", success];
-        [code appendFormat:@"%@:;\n", failure];
-        [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
-        [code appendFormat:@"%@:;\n", success];
-    }
-    else if (self.repeats)
-    {
-        [code appendString:[self.node compile:failLabel]];
-        
-        NSString *loop = [[Compiler class] unique:@"L"];
-        NSString *exit = [[Compiler class] unique:@"L"];
-        [code appendFormat:@"    NSUInteger %@, %@;\n", index, thunkpos];
-        [code appendFormat:@"%@:;\n", loop];
-        [code appendFormat:@"    %@=_index; %@=yythunkpos;\n", index, thunkpos];
-        [code appendString:[self.node compile:exit]];
-        [code appendFormat:@"    goto %@;\n", loop];
-        [code appendFormat:@"%@:;\n", exit];
-        [code appendFormat:@"    _index=%@; yythunkpos=%@;\n", index, thunkpos];
+        [code appendString:@"    "];
     }
     else
-        return [self.node compile:failLabel];
+    {
+        [code appendString:@"    if (!"];
+    }
+    
+    [code appendFormat:@"[parser %@:^(%@ *parser){\n", selector, parserClassName];
+    [code appendString:[self.node compile:parserClassName]];
+    [code appendString:@"    return YES;"];
+    [code appendString:@"    }]"];
+    
+    if (self.optional)
+    {
+        [code appendFormat:@";\n"];
+    }
+    else
+    {
+        [code appendFormat:@") return NO;\n"];
+    }
     
     return code;
 }

@@ -35,9 +35,9 @@
 #pragma mark Node Methods
 //==================================================================================================
 
-- (NSString *) compile:(NSString *)failLabel
+- (NSString *) compile:(NSString *)parserClassName
 {
-    return [NSString stringWithFormat:@"    [self yyDo:@selector(%@:)];\n",
+    return [NSString stringWithFormat:@"    [parser performAction:@selector(%@:)];\n",
             self.selectorName];
 }
 

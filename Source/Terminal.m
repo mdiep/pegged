@@ -17,12 +17,12 @@
 #pragma mark Public Methods
 //==================================================================================================
 
-- (NSString *) compile:(NSString *)failLabel
+- (NSString *) compile:(NSString *)parserClassName
 {
     NSMutableString *code = [NSMutableString string];
     
-    [code appendFormat:@"    if (%@%@) goto %@;\n",
-     self.inverted ? @"" : @"!", [self condition], failLabel];
+    [code appendFormat:@"    if (%@%@) return NO;\n",
+     self.inverted ? @"" : @"!", [self condition]];
     
     return code;
 }

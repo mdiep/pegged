@@ -8,51 +8,9 @@
 
 @interface PEGParser ()
 
-- (BOOL) _matchDot;
-- (BOOL) _matchString:(char *)s;
-- (BOOL) _matchClass:(unsigned char *)bits;
-- (BOOL) matchAND;
-- (BOOL) matchAction;
-- (BOOL) matchBEGIN;
-- (BOOL) matchCLOSE;
-- (BOOL) matchChar;
-- (BOOL) matchClass;
-- (BOOL) matchCode;
-- (BOOL) matchComment;
-- (BOOL) matchDOT;
-- (BOOL) matchDeclaration;
-- (BOOL) matchDefinition;
-- (BOOL) matchEND;
-- (BOOL) matchEffect;
-- (BOOL) matchEndOfDecl;
-- (BOOL) matchEndOfFile;
-- (BOOL) matchEndOfLine;
-- (BOOL) matchExpression;
-- (BOOL) matchGrammar;
-- (BOOL) matchHorizSpace;
-- (BOOL) matchIdentCont;
-- (BOOL) matchIdentStart;
-- (BOOL) matchIdentifier;
-- (BOOL) matchLEFTARROW;
-- (BOOL) matchLiteral;
-- (BOOL) matchNOT;
-- (BOOL) matchOPEN;
-- (BOOL) matchOPTION;
-- (BOOL) matchPLUS;
-- (BOOL) matchPROPERTY;
-- (BOOL) matchPrefix;
-- (BOOL) matchPrimary;
-- (BOOL) matchPropIdentifier;
-- (BOOL) matchPropParamaters;
-- (BOOL) matchQUESTION;
-- (BOOL) matchRange;
-- (BOOL) matchSLASH;
-- (BOOL) matchSTAR;
-- (BOOL) matchSequence;
-- (BOOL) matchSpace;
-- (BOOL) matchSpacing;
-- (BOOL) matchSuffix;
-
+- (BOOL) matchDot;
+- (BOOL) matchString:(char *)s;
+- (BOOL) matchClass:(unsigned char *)bits;
 @end
 
 
@@ -94,14 +52,79 @@
     return YES;
 }
 
-- (BOOL) _matchDot
+
+- (void) beginCapture
+{
+    if (_capturing) yybegin = _index;
+}
+
+
+- (void) endCapture
+{
+    if (_capturing) yyend = _index;
+}
+
+
+- (BOOL) invert:(PEGParserRule)rule
+{
+    return ![self matchOne:rule];
+}
+
+
+- (BOOL) lookAhead:(PEGParserRule)rule
+{
+    NSUInteger index=_index, yythunkpos=_yythunkpos;
+    BOOL capturing = _capturing;
+    _capturing = NO;
+    BOOL matched = rule(self);
+    _capturing = capturing;
+    _index=index, _yythunkpos=yythunkpos;
+    return matched;
+}
+
+
+- (BOOL) matchDot
 {
     if (_index >= _limit && ![self _refill]) return NO;
     ++_index;
     return YES;
 }
 
-- (BOOL) _matchString:(char *)s
+
+- (BOOL) matchOne:(PEGParserRule)rule
+{
+    NSUInteger index=_index, yythunkpos=_yythunkpos;
+    if (rule(self))
+        return YES;
+    _index=index, _yythunkpos=yythunkpos;
+    return NO;
+}
+
+
+- (BOOL) matchMany:(PEGParserRule)rule
+{
+    if (![self matchOne:rule])
+        return NO;
+    while ([self matchOne:rule])
+        ;
+    return YES;
+}
+
+
+- (BOOL) matchRule:(NSString *)ruleName
+{
+    NSArray *rules = [_rules objectForKey:ruleName];
+    if (![rules count])
+        NSLog(@"Couldn't find rule name \"%@\".", ruleName);
+    
+    for (PEGParserRule rule in rules)
+        if ([self matchOne:rule])
+            return YES;
+    return NO;
+}
+
+
+- (BOOL) matchString:(char *)s
 {
 #ifndef PEGPARSER_CASE_INSENSITIVE
     const char *cstring = [_string UTF8String];
@@ -115,41 +138,41 @@
         if (cstring[_index] != *s)
         {
             _index = saved;
-    yyprintf((stderr, "  fail _matchString"));
+    yyprintf((stderr, "  fail matchString"));
             return NO;
         }
         ++s;
         ++_index;
     }
-    yyprintf((stderr, "  ok   _matchString"));
+    yyprintf((stderr, "  ok   matchString"));
     return YES;
 }
 
-- (BOOL) _matchClass:(unsigned char *)bits
+- (BOOL) matchClass:(unsigned char *)bits
 {
     if (_index >= _limit && ![self _refill]) return NO;
     int c = [_string characterAtIndex:_index];
     if (bits[c >> 3] & (1 << (c & 7)))
     {
         ++_index;
-        yyprintf((stderr, "  ok   _matchClass"));
+        yyprintf((stderr, "  ok   matchClass"));
         return YES;
     }
-    yyprintf((stderr, "  fail _matchClass"));
+    yyprintf((stderr, "  fail matchClass"));
     return NO;
 }
 
-- (void) yyDo:(SEL)action
+- (void) performAction:(SEL)action
 {
-    while (yythunkpos >= yythunkslen)
+    while (_yythunkpos >= yythunkslen)
     {
         yythunkslen *= 2;
         yythunks= realloc(yythunks, sizeof(yythunk) * yythunkslen);
     }
-    yythunks[yythunkpos].begin=  yybegin;
-    yythunks[yythunkpos].end=    yyend;
-    yythunks[yythunkpos].action= action;
-    ++yythunkpos;
+    yythunks[_yythunkpos].begin=  yybegin;
+    yythunks[_yythunkpos].end=    yyend;
+    yythunks[_yythunkpos].action= action;
+    ++_yythunkpos;
 }
 
 - (NSString *) yyText:(int)begin to:(int)end
@@ -163,14 +186,14 @@
 - (void) yyDone
 {
     int pos;
-    for (pos= 0;  pos < yythunkpos;  ++pos)
+    for (pos= 0;  pos < _yythunkpos;  ++pos)
     {
         yythunk *thunk= &yythunks[pos];
         NSString *text = [self yyText:thunk->begin to:thunk->end];
         yyprintf((stderr, "DO [%d] %s %s\n", pos, [NSStringFromSelector(thunk->action) UTF8String], [text UTF8String]));
         [self performSelector:thunk->action withObject:text];
     }
-    yythunkpos= 0;
+    _yythunkpos= 0;
 }
 
 - (void) yyCommit
@@ -183,7 +206,7 @@
 
     yybegin -= _index;
     yyend -= _index;
-    yythunkpos= 0;
+    _yythunkpos= 0;
 }
 
 - (void) yy_1_Declaration:(NSString *)text
@@ -306,1048 +329,551 @@
  [self.compiler endCapture]; ;
 }
 
-- (BOOL) matchAND
-{
-    NSUInteger index0=_index, yythunkpos1=yythunkpos;
-    yyprintf((stderr, "%s", "AND"));
-    if (![self _matchString:"&"]) goto L2;
-    if (![self matchSpacing]) goto L2;
-    yyprintf((stderr, "  ok   %s", "AND"));
+static PEGParserRule __AND = ^(PEGParser *parser){
+    if (![parser matchString:"&"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L2:;
-    _index=index0; yythunkpos=yythunkpos1;
-    yyprintf((stderr, "  fail %s", "AND"));
-    return NO;
-}
+};
 
-- (BOOL) matchAction
-{
-    NSUInteger index5=_index, yythunkpos6=yythunkpos;
-    yyprintf((stderr, "%s", "Action"));
-    if (![self _matchString:"{"]) goto L7;
-    if (_capturing) yybegin = _index;
-    NSUInteger index10, yythunkpos11;
-L12:;
-    index10=_index; yythunkpos11=yythunkpos;
-    if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\337\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto L13;
-    goto L12;
-L13:;
-    _index=index10; yythunkpos=yythunkpos11;
-    if (_capturing) yyend = _index;
-    if (![self _matchString:"}"]) goto L7;
-    if (![self matchSpacing]) goto L7;
-    yyprintf((stderr, "  ok   %s", "Action"));
+static PEGParserRule __Action = ^(PEGParser *parser){
+    if (![parser matchString:"{"]) return NO;
+    [parser beginCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\337\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    if (![parser matchString:"}"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L7:;
-    _index=index5; yythunkpos=yythunkpos6;
-    yyprintf((stderr, "  fail %s", "Action"));
-    return NO;
-}
+};
 
-- (BOOL) matchBEGIN
-{
-    NSUInteger index14=_index, yythunkpos15=yythunkpos;
-    yyprintf((stderr, "%s", "BEGIN"));
-    if (![self _matchString:"<"]) goto L16;
-    if (![self matchSpacing]) goto L16;
-    yyprintf((stderr, "  ok   %s", "BEGIN"));
+static PEGParserRule __BEGIN = ^(PEGParser *parser){
+    if (![parser matchString:"<"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L16:;
-    _index=index14; yythunkpos=yythunkpos15;
-    yyprintf((stderr, "  fail %s", "BEGIN"));
-    return NO;
-}
+};
 
-- (BOOL) matchCLOSE
-{
-    NSUInteger index19=_index, yythunkpos20=yythunkpos;
-    yyprintf((stderr, "%s", "CLOSE"));
-    if (![self _matchString:")"]) goto L21;
-    if (![self matchSpacing]) goto L21;
-    yyprintf((stderr, "  ok   %s", "CLOSE"));
+static PEGParserRule __CLOSE = ^(PEGParser *parser){
+    if (![parser matchString:")"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L21:;
-    _index=index19; yythunkpos=yythunkpos20;
-    yyprintf((stderr, "  fail %s", "CLOSE"));
-    return NO;
-}
+};
 
-- (BOOL) matchChar
-{
-    NSUInteger index24=_index, yythunkpos25=yythunkpos;
-    yyprintf((stderr, "%s", "Char"));
-    NSUInteger index27=_index, yythunkpos28=yythunkpos;
-    if (![self _matchString:"\\"]) goto L30;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\204\000\000\000\000\000\000\070\000\100\024\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L30;
-    goto L29;
-L30:;
-    _index=index27; yythunkpos=yythunkpos28;
-    if (![self _matchString:"\\"]) goto L33;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\007\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L33;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L33;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L33;
-    goto L29;
-L33:;
-    _index=index27; yythunkpos=yythunkpos28;
-    if (![self _matchString:"\\"]) goto L36;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L36;
-    NSUInteger index39=_index, yythunkpos40=yythunkpos;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L41;
-    goto L42;
-L41:;
-    _index=index39; yythunkpos=yythunkpos40;
-L42:;
-    goto L29;
-L36:;
-    _index=index27; yythunkpos=yythunkpos28;
-    if (![self _matchString:"\\x"]) goto L43;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\176\000\000\000\176\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L43;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\176\000\000\000\176\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L43;
-    goto L29;
-L43:;
-    _index=index27; yythunkpos=yythunkpos28;
-    NSUInteger index48=_index, yythunkpos49=yythunkpos;
-    BOOL capturing51 = _capturing; _capturing=NO;
-    if ([self _matchString:"\\"]) goto L50;
-    _index=index48; yythunkpos=yythunkpos49;
-    _capturing = capturing51;
-    goto L52;
-L50:;
-    _capturing = capturing51;
-    goto L26;
-L52:;
-    if (![self _matchDot]) goto L26;
-    goto L29;
-L29:;
-    yyprintf((stderr, "  ok   %s", "Char"));
+static PEGParserRule __Char = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\\"]) return NO;
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\204\000\000\000\000\000\000\070\000\100\024\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\\"]) return NO;
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\007\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\\"]) return NO;
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    [parser matchOne:^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\377\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    return YES;    }];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\\x"]) return NO;
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\176\000\000\000\176\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\176\000\000\000\176\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser lookAhead:^(PEGParser *parser){
+    if ([parser matchString:"\\"]) return NO;
+    return YES;    }]) return NO;
+    if (![parser matchDot]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L26:;
-    _index=index24; yythunkpos=yythunkpos25;
-    yyprintf((stderr, "  fail %s", "Char"));
-    return NO;
-}
+};
 
-- (BOOL) matchClass
-{
-    NSUInteger index53=_index, yythunkpos54=yythunkpos;
-    yyprintf((stderr, "%s", "Class"));
-    if (![self _matchString:"["]) goto L55;
-    if (_capturing) yybegin = _index;
-    NSUInteger index58, yythunkpos59;
-L60:;
-    index58=_index; yythunkpos59=yythunkpos;
-    NSUInteger index64=_index, yythunkpos65=yythunkpos;
-    BOOL capturing67 = _capturing; _capturing=NO;
-    if ([self _matchString:"]"]) goto L66;
-    _index=index64; yythunkpos=yythunkpos65;
-    _capturing = capturing67;
-    goto L68;
-L66:;
-    _capturing = capturing67;
-    goto L61;
-L68:;
-    if (![self matchRange]) goto L61;
-    goto L60;
-L61:;
-    _index=index58; yythunkpos=yythunkpos59;
-    if (_capturing) yyend = _index;
-    if (![self _matchString:"]"]) goto L55;
-    if (![self matchSpacing]) goto L55;
-    yyprintf((stderr, "  ok   %s", "Class"));
+static PEGParserRule __Class = ^(PEGParser *parser){
+    if (![parser matchString:"["]) return NO;
+    [parser beginCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser lookAhead:^(PEGParser *parser){
+    if ([parser matchString:"]"]) return NO;
+    return YES;    }]) return NO;
+    if (![parser matchRule:@"Range"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    if (![parser matchString:"]"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L55:;
-    _index=index53; yythunkpos=yythunkpos54;
-    yyprintf((stderr, "  fail %s", "Class"));
-    return NO;
-}
+};
 
-- (BOOL) matchCode
-{
-    NSUInteger index69=_index, yythunkpos70=yythunkpos;
-    yyprintf((stderr, "%s", "Code"));
-    if (![self _matchString:"{{"]) goto L71;
-    if (_capturing) yybegin = _index;
-    NSUInteger index74, yythunkpos75;
-L76:;
-    index74=_index; yythunkpos75=yythunkpos;
-    if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\337\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto L77;
-    goto L76;
-L77:;
-    _index=index74; yythunkpos=yythunkpos75;
-    if (_capturing) yyend = _index;
-    if (![self _matchString:"}}"]) goto L71;
-    if (![self matchSpacing]) goto L71;
-    yyprintf((stderr, "  ok   %s", "Code"));
+static PEGParserRule __Code = ^(PEGParser *parser){
+    if (![parser matchString:"{{"]) return NO;
+    [parser beginCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\337\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    if (![parser matchString:"}}"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L71:;
-    _index=index69; yythunkpos=yythunkpos70;
-    yyprintf((stderr, "  fail %s", "Code"));
-    return NO;
-}
+};
 
-- (BOOL) matchComment
-{
-    NSUInteger index78=_index, yythunkpos79=yythunkpos;
-    yyprintf((stderr, "%s", "Comment"));
-    if (![self _matchString:"#"]) goto L80;
-    NSUInteger index83, yythunkpos84;
-L85:;
-    index83=_index; yythunkpos84=yythunkpos;
-    NSUInteger index89=_index, yythunkpos90=yythunkpos;
-    BOOL capturing92 = _capturing; _capturing=NO;
-    if ([self matchEndOfLine]) goto L91;
-    _index=index89; yythunkpos=yythunkpos90;
-    _capturing = capturing92;
-    goto L93;
-L91:;
-    _capturing = capturing92;
-    goto L86;
-L93:;
-    if (![self _matchDot]) goto L86;
-    goto L85;
-L86:;
-    _index=index83; yythunkpos=yythunkpos84;
-    if (![self matchEndOfLine]) goto L80;
-    yyprintf((stderr, "  ok   %s", "Comment"));
+static PEGParserRule __Comment = ^(PEGParser *parser){
+    if (![parser matchString:"#"]) return NO;
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser lookAhead:^(PEGParser *parser){
+    if ([parser matchRule:@"EndOfLine"]) return NO;
+    return YES;    }]) return NO;
+    if (![parser matchDot]) return NO;
+    return YES;    }];
+    if (![parser matchRule:@"EndOfLine"]) return NO;
     return YES;
-L80:;
-    _index=index78; yythunkpos=yythunkpos79;
-    yyprintf((stderr, "  fail %s", "Comment"));
-    return NO;
-}
+};
 
-- (BOOL) matchDOT
-{
-    NSUInteger index94=_index, yythunkpos95=yythunkpos;
-    yyprintf((stderr, "%s", "DOT"));
-    if (![self _matchString:"."]) goto L96;
-    if (![self matchSpacing]) goto L96;
-    yyprintf((stderr, "  ok   %s", "DOT"));
+static PEGParserRule __DOT = ^(PEGParser *parser){
+    if (![parser matchString:"."]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L96:;
-    _index=index94; yythunkpos=yythunkpos95;
-    yyprintf((stderr, "  fail %s", "DOT"));
-    return NO;
-}
+};
 
-- (BOOL) matchDeclaration
-{
-    NSUInteger index99=_index, yythunkpos100=yythunkpos;
-    yyprintf((stderr, "%s", "Declaration"));
-    NSUInteger index102=_index, yythunkpos103=yythunkpos;
-    if (![self matchOPTION]) goto L105;
-    if (![self _matchString:"case-insensitive"]) goto L105;
-    NSUInteger index108, yythunkpos109;
-L110:;
-    index108=_index; yythunkpos109=yythunkpos;
-    if (![self matchHorizSpace]) goto L111;
-    goto L110;
-L111:;
-    _index=index108; yythunkpos=yythunkpos109;
-    if (![self matchEndOfDecl]) goto L105;
-    [self yyDo:@selector(yy_1_Declaration:)];
-    goto L104;
-L105:;
-    _index=index102; yythunkpos=yythunkpos103;
-    if (![self matchPROPERTY]) goto L101;
-    NSUInteger index114=_index, yythunkpos115=yythunkpos;
-    if (![self matchPropParamaters]) goto L116;
-    [self yyDo:@selector(yy_2_Declaration:)];
-    goto L117;
-L116:;
-    _index=index114; yythunkpos=yythunkpos115;
-L117:;
-    if (![self matchPropIdentifier]) goto L101;
-    [self yyDo:@selector(yy_3_Declaration:)];
-    if (_capturing) yybegin = _index;
-    NSUInteger index120, yythunkpos121;
-L122:;
-    index120=_index; yythunkpos121=yythunkpos;
-    if (![self _matchString:"*"]) goto L123;
-    goto L122;
-L123:;
-    _index=index120; yythunkpos=yythunkpos121;
-    if (_capturing) yyend = _index;
-    NSUInteger index124, yythunkpos125;
-L126:;
-    index124=_index; yythunkpos125=yythunkpos;
-    if (![self matchHorizSpace]) goto L127;
-    goto L126;
-L127:;
-    _index=index124; yythunkpos=yythunkpos125;
-    [self yyDo:@selector(yy_4_Declaration:)];
-    if (![self matchPropIdentifier]) goto L101;
-    if (![self matchEndOfDecl]) goto L101;
-    [self yyDo:@selector(yy_5_Declaration:)];
-    goto L104;
-L104:;
-    yyprintf((stderr, "  ok   %s", "Declaration"));
+static PEGParserRule __Declaration = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"OPTION"]) return NO;
+    if (![parser matchString:"case-insensitive"]) return NO;
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"HorizSpace"]) return NO;
+    return YES;    }];
+    if (![parser matchRule:@"EndOfDecl"]) return NO;
+    [parser performAction:@selector(yy_1_Declaration:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"PROPERTY"]) return NO;
+    [parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"PropParamaters"]) return NO;
+    [parser performAction:@selector(yy_2_Declaration:)];
+    return YES;    }];
+    if (![parser matchRule:@"PropIdentifier"]) return NO;
+    [parser performAction:@selector(yy_3_Declaration:)];
+    [parser beginCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchString:"*"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"HorizSpace"]) return NO;
+    return YES;    }];
+    [parser performAction:@selector(yy_4_Declaration:)];
+    if (![parser matchRule:@"PropIdentifier"]) return NO;
+    if (![parser matchRule:@"EndOfDecl"]) return NO;
+    [parser performAction:@selector(yy_5_Declaration:)];
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L101:;
-    _index=index99; yythunkpos=yythunkpos100;
-    yyprintf((stderr, "  fail %s", "Declaration"));
-    return NO;
-}
+};
 
-- (BOOL) matchDefinition
-{
-    NSUInteger index128=_index, yythunkpos129=yythunkpos;
-    yyprintf((stderr, "%s", "Definition"));
-    if (![self matchIdentifier]) goto L130;
-    [self yyDo:@selector(yy_1_Definition:)];
-    if (![self matchLEFTARROW]) goto L130;
-    if (![self matchExpression]) goto L130;
-    [self yyDo:@selector(yy_2_Definition:)];
-    yyprintf((stderr, "  ok   %s", "Definition"));
+static PEGParserRule __Definition = ^(PEGParser *parser){
+    if (![parser matchRule:@"Identifier"]) return NO;
+    [parser performAction:@selector(yy_1_Definition:)];
+    if (![parser matchRule:@"LEFTARROW"]) return NO;
+    if (![parser matchRule:@"Expression"]) return NO;
+    [parser performAction:@selector(yy_2_Definition:)];
     return YES;
-L130:;
-    _index=index128; yythunkpos=yythunkpos129;
-    yyprintf((stderr, "  fail %s", "Definition"));
-    return NO;
-}
+};
 
-- (BOOL) matchEND
-{
-    NSUInteger index133=_index, yythunkpos134=yythunkpos;
-    yyprintf((stderr, "%s", "END"));
-    if (![self _matchString:">"]) goto L135;
-    if (![self matchSpacing]) goto L135;
-    yyprintf((stderr, "  ok   %s", "END"));
+static PEGParserRule __END = ^(PEGParser *parser){
+    if (![parser matchString:">"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L135:;
-    _index=index133; yythunkpos=yythunkpos134;
-    yyprintf((stderr, "  fail %s", "END"));
-    return NO;
-}
+};
 
-- (BOOL) matchEffect
-{
-    NSUInteger index138=_index, yythunkpos139=yythunkpos;
-    yyprintf((stderr, "%s", "Effect"));
-    NSUInteger index141=_index, yythunkpos142=yythunkpos;
-    if (![self matchCode]) goto L144;
-    [self yyDo:@selector(yy_1_Effect:)];
-    goto L143;
-L144:;
-    _index=index141; yythunkpos=yythunkpos142;
-    if (![self matchAction]) goto L147;
-    [self yyDo:@selector(yy_2_Effect:)];
-    goto L143;
-L147:;
-    _index=index141; yythunkpos=yythunkpos142;
-    if (![self matchBEGIN]) goto L150;
-    [self yyDo:@selector(yy_3_Effect:)];
-    goto L143;
-L150:;
-    _index=index141; yythunkpos=yythunkpos142;
-    if (![self matchEND]) goto L140;
-    [self yyDo:@selector(yy_4_Effect:)];
-    goto L143;
-L143:;
-    yyprintf((stderr, "  ok   %s", "Effect"));
+static PEGParserRule __Effect = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Code"]) return NO;
+    [parser performAction:@selector(yy_1_Effect:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Action"]) return NO;
+    [parser performAction:@selector(yy_2_Effect:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"BEGIN"]) return NO;
+    [parser performAction:@selector(yy_3_Effect:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"END"]) return NO;
+    [parser performAction:@selector(yy_4_Effect:)];
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L140:;
-    _index=index138; yythunkpos=yythunkpos139;
-    yyprintf((stderr, "  fail %s", "Effect"));
-    return NO;
-}
+};
 
-- (BOOL) matchEndOfDecl
-{
-    NSUInteger index155=_index, yythunkpos156=yythunkpos;
-    yyprintf((stderr, "%s", "EndOfDecl"));
-    if (![self _matchString:";"]) goto L157;
-    NSUInteger index160, yythunkpos161;
-L162:;
-    index160=_index; yythunkpos161=yythunkpos;
-    if (![self matchHorizSpace]) goto L163;
-    goto L162;
-L163:;
-    _index=index160; yythunkpos=yythunkpos161;
-    NSUInteger index164=_index, yythunkpos165=yythunkpos;
-    if (![self matchEndOfLine]) goto L167;
-    goto L166;
-L167:;
-    _index=index164; yythunkpos=yythunkpos165;
-    if (![self matchComment]) goto L157;
-    goto L166;
-L166:;
-    yyprintf((stderr, "  ok   %s", "EndOfDecl"));
+static PEGParserRule __EndOfDecl = ^(PEGParser *parser){
+    if (![parser matchString:";"]) return NO;
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"HorizSpace"]) return NO;
+    return YES;    }];
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"EndOfLine"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Comment"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L157:;
-    _index=index155; yythunkpos=yythunkpos156;
-    yyprintf((stderr, "  fail %s", "EndOfDecl"));
-    return NO;
-}
+};
 
-- (BOOL) matchEndOfFile
-{
-    NSUInteger index168=_index, yythunkpos169=yythunkpos;
-    yyprintf((stderr, "%s", "EndOfFile"));
-    NSUInteger index171=_index, yythunkpos172=yythunkpos;
-    BOOL capturing174 = _capturing; _capturing=NO;
-    if ([self _matchDot]) goto L173;
-    _index=index171; yythunkpos=yythunkpos172;
-    _capturing = capturing174;
-    goto L175;
-L173:;
-    _capturing = capturing174;
-    goto L170;
-L175:;
-    yyprintf((stderr, "  ok   %s", "EndOfFile"));
+static PEGParserRule __EndOfFile = ^(PEGParser *parser){
+    if (![parser lookAhead:^(PEGParser *parser){
+    if ([parser matchDot]) return NO;
+    return YES;    }]) return NO;
     return YES;
-L170:;
-    _index=index168; yythunkpos=yythunkpos169;
-    yyprintf((stderr, "  fail %s", "EndOfFile"));
-    return NO;
-}
+};
 
-- (BOOL) matchEndOfLine
-{
-    NSUInteger index176=_index, yythunkpos177=yythunkpos;
-    yyprintf((stderr, "%s", "EndOfLine"));
-    NSUInteger index179=_index, yythunkpos180=yythunkpos;
-    if (![self _matchString:"\r\n"]) goto L182;
-    goto L181;
-L182:;
-    _index=index179; yythunkpos=yythunkpos180;
-    if (![self _matchString:"\n"]) goto L183;
-    goto L181;
-L183:;
-    _index=index179; yythunkpos=yythunkpos180;
-    if (![self _matchString:"\r"]) goto L178;
-    goto L181;
-L181:;
-    yyprintf((stderr, "  ok   %s", "EndOfLine"));
+static PEGParserRule __EndOfLine = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\r\n"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\n"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\r"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L178:;
-    _index=index176; yythunkpos=yythunkpos177;
-    yyprintf((stderr, "  fail %s", "EndOfLine"));
-    return NO;
-}
+};
 
-- (BOOL) matchExpression
-{
-    NSUInteger index184=_index, yythunkpos185=yythunkpos;
-    yyprintf((stderr, "%s", "Expression"));
-    if (![self matchSequence]) goto L186;
-    NSUInteger index189, yythunkpos190;
-L191:;
-    index189=_index; yythunkpos190=yythunkpos;
-    if (![self matchSLASH]) goto L192;
-    if (![self matchSequence]) goto L192;
-    [self yyDo:@selector(yy_1_Expression:)];
-    goto L191;
-L192:;
-    _index=index189; yythunkpos=yythunkpos190;
-    yyprintf((stderr, "  ok   %s", "Expression"));
+static PEGParserRule __Expression = ^(PEGParser *parser){
+    if (![parser matchRule:@"Sequence"]) return NO;
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"SLASH"]) return NO;
+    if (![parser matchRule:@"Sequence"]) return NO;
+    [parser performAction:@selector(yy_1_Expression:)];
+    return YES;    }];
     return YES;
-L186:;
-    _index=index184; yythunkpos=yythunkpos185;
-    yyprintf((stderr, "  fail %s", "Expression"));
-    return NO;
-}
+};
 
-- (BOOL) matchGrammar
-{
-    NSUInteger index195=_index, yythunkpos196=yythunkpos;
-    yyprintf((stderr, "%s", "Grammar"));
-    if (![self matchSpacing]) goto L197;
-    NSUInteger index200, yythunkpos201;
-L202:;
-    index200=_index; yythunkpos201=yythunkpos;
-    if (![self matchDeclaration]) goto L203;
-    goto L202;
-L203:;
-    _index=index200; yythunkpos=yythunkpos201;
-    if (![self matchSpacing]) goto L197;
-    if (![self matchDefinition]) goto L197;
-    NSUInteger index204, yythunkpos205;
-L206:;
-    index204=_index; yythunkpos205=yythunkpos;
-    if (![self matchDefinition]) goto L207;
-    goto L206;
-L207:;
-    _index=index204; yythunkpos=yythunkpos205;
-    if (![self matchEndOfFile]) goto L197;
-    yyprintf((stderr, "  ok   %s", "Grammar"));
+static PEGParserRule __Grammar = ^(PEGParser *parser){
+    if (![parser matchRule:@"Spacing"]) return NO;
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"Declaration"]) return NO;
+    return YES;    }];
+    if (![parser matchRule:@"Spacing"]) return NO;
+    if (![parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"Definition"]) return NO;
+    return YES;    }]) return NO;
+    if (![parser matchRule:@"EndOfFile"]) return NO;
     return YES;
-L197:;
-    _index=index195; yythunkpos=yythunkpos196;
-    yyprintf((stderr, "  fail %s", "Grammar"));
-    return NO;
-}
+};
 
-- (BOOL) matchHorizSpace
-{
-    NSUInteger index208=_index, yythunkpos209=yythunkpos;
-    yyprintf((stderr, "%s", "HorizSpace"));
-    NSUInteger index211=_index, yythunkpos212=yythunkpos;
-    if (![self _matchString:" "]) goto L214;
-    goto L213;
-L214:;
-    _index=index211; yythunkpos=yythunkpos212;
-    if (![self _matchString:"\t"]) goto L210;
-    goto L213;
-L213:;
-    yyprintf((stderr, "  ok   %s", "HorizSpace"));
+static PEGParserRule __HorizSpace = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:" "]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\t"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L210:;
-    _index=index208; yythunkpos=yythunkpos209;
-    yyprintf((stderr, "  fail %s", "HorizSpace"));
-    return NO;
-}
+};
 
-- (BOOL) matchIdentCont
-{
-    NSUInteger index215=_index, yythunkpos216=yythunkpos;
-    yyprintf((stderr, "%s", "IdentCont"));
-    NSUInteger index218=_index, yythunkpos219=yythunkpos;
-    if (![self matchIdentStart]) goto L221;
-    goto L220;
-L221:;
-    _index=index218; yythunkpos=yythunkpos219;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L217;
-    goto L220;
-L220:;
-    yyprintf((stderr, "  ok   %s", "IdentCont"));
+static PEGParserRule __IdentCont = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"IdentStart"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\377\003\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L217:;
-    _index=index215; yythunkpos=yythunkpos216;
-    yyprintf((stderr, "  fail %s", "IdentCont"));
-    return NO;
-}
+};
 
-- (BOOL) matchIdentStart
-{
-    NSUInteger index222=_index, yythunkpos223=yythunkpos;
-    yyprintf((stderr, "%s", "IdentStart"));
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\000\000\000\000\376\377\377\207\376\377\377\007\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L224;
-    yyprintf((stderr, "  ok   %s", "IdentStart"));
+static PEGParserRule __IdentStart = ^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\000\000\000\000\376\377\377\207\376\377\377\007\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
     return YES;
-L224:;
-    _index=index222; yythunkpos=yythunkpos223;
-    yyprintf((stderr, "  fail %s", "IdentStart"));
-    return NO;
-}
+};
 
-- (BOOL) matchIdentifier
-{
-    NSUInteger index225=_index, yythunkpos226=yythunkpos;
-    yyprintf((stderr, "%s", "Identifier"));
-    if (_capturing) yybegin = _index;
-    if (![self matchIdentStart]) goto L227;
-    NSUInteger index230, yythunkpos231;
-L232:;
-    index230=_index; yythunkpos231=yythunkpos;
-    if (![self matchIdentCont]) goto L233;
-    goto L232;
-L233:;
-    _index=index230; yythunkpos=yythunkpos231;
-    if (_capturing) yyend = _index;
-    if (![self matchSpacing]) goto L227;
-    yyprintf((stderr, "  ok   %s", "Identifier"));
+static PEGParserRule __Identifier = ^(PEGParser *parser){
+    [parser beginCapture];
+    if (![parser matchRule:@"IdentStart"]) return NO;
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"IdentCont"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L227:;
-    _index=index225; yythunkpos=yythunkpos226;
-    yyprintf((stderr, "  fail %s", "Identifier"));
-    return NO;
-}
+};
 
-- (BOOL) matchLEFTARROW
-{
-    NSUInteger index234=_index, yythunkpos235=yythunkpos;
-    yyprintf((stderr, "%s", "LEFTARROW"));
-    if (![self _matchString:"<-"]) goto L236;
-    if (![self matchSpacing]) goto L236;
-    yyprintf((stderr, "  ok   %s", "LEFTARROW"));
+static PEGParserRule __LEFTARROW = ^(PEGParser *parser){
+    if (![parser matchString:"<-"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L236:;
-    _index=index234; yythunkpos=yythunkpos235;
-    yyprintf((stderr, "  fail %s", "LEFTARROW"));
-    return NO;
-}
+};
 
-- (BOOL) matchLiteral
-{
-    NSUInteger index239=_index, yythunkpos240=yythunkpos;
-    yyprintf((stderr, "%s", "Literal"));
-    NSUInteger index242=_index, yythunkpos243=yythunkpos;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L245;
-    if (_capturing) yybegin = _index;
-    NSUInteger index248, yythunkpos249;
-L250:;
-    index248=_index; yythunkpos249=yythunkpos;
-    NSUInteger index254=_index, yythunkpos255=yythunkpos;
-    BOOL capturing257 = _capturing; _capturing=NO;
-    if ([self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L256;
-    _index=index254; yythunkpos=yythunkpos255;
-    _capturing = capturing257;
-    goto L258;
-L256:;
-    _capturing = capturing257;
-    goto L251;
-L258:;
-    if (![self matchChar]) goto L251;
-    goto L250;
-L251:;
-    _index=index248; yythunkpos=yythunkpos249;
-    if (_capturing) yyend = _index;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L245;
-    if (![self matchSpacing]) goto L245;
-    goto L244;
-L245:;
-    _index=index242; yythunkpos=yythunkpos243;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L241;
-    if (_capturing) yybegin = _index;
-    NSUInteger index261, yythunkpos262;
-L263:;
-    index261=_index; yythunkpos262=yythunkpos;
-    NSUInteger index267=_index, yythunkpos268=yythunkpos;
-    BOOL capturing270 = _capturing; _capturing=NO;
-    if ([self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L269;
-    _index=index267; yythunkpos=yythunkpos268;
-    _capturing = capturing270;
-    goto L271;
-L269:;
-    _capturing = capturing270;
-    goto L264;
-L271:;
-    if (![self matchChar]) goto L264;
-    goto L263;
-L264:;
-    _index=index261; yythunkpos=yythunkpos262;
-    if (_capturing) yyend = _index;
-    if (![self _matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) goto L241;
-    if (![self matchSpacing]) goto L241;
-    goto L244;
-L244:;
-    yyprintf((stderr, "  ok   %s", "Literal"));
+static PEGParserRule __Literal = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    [parser beginCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser lookAhead:^(PEGParser *parser){
+    if ([parser matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    return YES;    }]) return NO;
+    if (![parser matchRule:@"Char"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\200\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    [parser beginCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser lookAhead:^(PEGParser *parser){
+    if ([parser matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    return YES;    }]) return NO;
+    if (![parser matchRule:@"Char"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    if (![parser matchClass:(unsigned char *)"\000\000\000\000\004\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L241:;
-    _index=index239; yythunkpos=yythunkpos240;
-    yyprintf((stderr, "  fail %s", "Literal"));
-    return NO;
-}
+};
 
-- (BOOL) matchNOT
-{
-    NSUInteger index272=_index, yythunkpos273=yythunkpos;
-    yyprintf((stderr, "%s", "NOT"));
-    if (![self _matchString:"!"]) goto L274;
-    if (![self matchSpacing]) goto L274;
-    yyprintf((stderr, "  ok   %s", "NOT"));
+static PEGParserRule __NOT = ^(PEGParser *parser){
+    if (![parser matchString:"!"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L274:;
-    _index=index272; yythunkpos=yythunkpos273;
-    yyprintf((stderr, "  fail %s", "NOT"));
-    return NO;
-}
+};
 
-- (BOOL) matchOPEN
-{
-    NSUInteger index277=_index, yythunkpos278=yythunkpos;
-    yyprintf((stderr, "%s", "OPEN"));
-    if (![self _matchString:"("]) goto L279;
-    if (![self matchSpacing]) goto L279;
-    yyprintf((stderr, "  ok   %s", "OPEN"));
+static PEGParserRule __OPEN = ^(PEGParser *parser){
+    if (![parser matchString:"("]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L279:;
-    _index=index277; yythunkpos=yythunkpos278;
-    yyprintf((stderr, "  fail %s", "OPEN"));
-    return NO;
-}
+};
 
-- (BOOL) matchOPTION
-{
-    NSUInteger index282=_index, yythunkpos283=yythunkpos;
-    yyprintf((stderr, "%s", "OPTION"));
-    if (![self _matchString:"@option"]) goto L284;
-    if (![self matchHorizSpace]) goto L284;
-    NSUInteger index287, yythunkpos288;
-L289:;
-    index287=_index; yythunkpos288=yythunkpos;
-    if (![self matchHorizSpace]) goto L290;
-    goto L289;
-L290:;
-    _index=index287; yythunkpos=yythunkpos288;
-    yyprintf((stderr, "  ok   %s", "OPTION"));
+static PEGParserRule __OPTION = ^(PEGParser *parser){
+    if (![parser matchString:"@option"]) return NO;
+    if (![parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"HorizSpace"]) return NO;
+    return YES;    }]) return NO;
     return YES;
-L284:;
-    _index=index282; yythunkpos=yythunkpos283;
-    yyprintf((stderr, "  fail %s", "OPTION"));
-    return NO;
-}
+};
 
-- (BOOL) matchPLUS
-{
-    NSUInteger index291=_index, yythunkpos292=yythunkpos;
-    yyprintf((stderr, "%s", "PLUS"));
-    if (![self _matchString:"+"]) goto L293;
-    if (![self matchSpacing]) goto L293;
-    yyprintf((stderr, "  ok   %s", "PLUS"));
+static PEGParserRule __PLUS = ^(PEGParser *parser){
+    if (![parser matchString:"+"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L293:;
-    _index=index291; yythunkpos=yythunkpos292;
-    yyprintf((stderr, "  fail %s", "PLUS"));
-    return NO;
-}
+};
 
-- (BOOL) matchPROPERTY
-{
-    NSUInteger index296=_index, yythunkpos297=yythunkpos;
-    yyprintf((stderr, "%s", "PROPERTY"));
-    if (![self _matchString:"@property"]) goto L298;
-    if (![self matchHorizSpace]) goto L298;
-    NSUInteger index301, yythunkpos302;
-L303:;
-    index301=_index; yythunkpos302=yythunkpos;
-    if (![self matchHorizSpace]) goto L304;
-    goto L303;
-L304:;
-    _index=index301; yythunkpos=yythunkpos302;
-    yyprintf((stderr, "  ok   %s", "PROPERTY"));
+static PEGParserRule __PROPERTY = ^(PEGParser *parser){
+    if (![parser matchString:"@property"]) return NO;
+    if (![parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"HorizSpace"]) return NO;
+    return YES;    }]) return NO;
     return YES;
-L298:;
-    _index=index296; yythunkpos=yythunkpos297;
-    yyprintf((stderr, "  fail %s", "PROPERTY"));
-    return NO;
-}
+};
 
-- (BOOL) matchPrefix
-{
-    NSUInteger index305=_index, yythunkpos306=yythunkpos;
-    yyprintf((stderr, "%s", "Prefix"));
-    NSUInteger index308=_index, yythunkpos309=yythunkpos;
-    if (![self matchAND]) goto L311;
-    if (![self matchSuffix]) goto L311;
-    [self yyDo:@selector(yy_1_Prefix:)];
-    goto L310;
-L311:;
-    _index=index308; yythunkpos=yythunkpos309;
-    if (![self matchNOT]) goto L314;
-    if (![self matchSuffix]) goto L314;
-    [self yyDo:@selector(yy_2_Prefix:)];
-    goto L310;
-L314:;
-    _index=index308; yythunkpos=yythunkpos309;
-    if (![self matchAND]) goto L317;
-    if (![self matchAction]) goto L317;
-    [self yyDo:@selector(yy_3_Prefix:)];
-    goto L310;
-L317:;
-    _index=index308; yythunkpos=yythunkpos309;
-    if (![self matchNOT]) goto L320;
-    if (![self matchAction]) goto L320;
-    [self yyDo:@selector(yy_4_Prefix:)];
-    goto L310;
-L320:;
-    _index=index308; yythunkpos=yythunkpos309;
-    if (![self matchSuffix]) goto L323;
-    goto L310;
-L323:;
-    _index=index308; yythunkpos=yythunkpos309;
-    if (![self matchEffect]) goto L307;
-    goto L310;
-L310:;
-    yyprintf((stderr, "  ok   %s", "Prefix"));
+static PEGParserRule __Prefix = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"AND"]) return NO;
+    if (![parser matchRule:@"Suffix"]) return NO;
+    [parser performAction:@selector(yy_1_Prefix:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"NOT"]) return NO;
+    if (![parser matchRule:@"Suffix"]) return NO;
+    [parser performAction:@selector(yy_2_Prefix:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"AND"]) return NO;
+    if (![parser matchRule:@"Action"]) return NO;
+    [parser performAction:@selector(yy_3_Prefix:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"NOT"]) return NO;
+    if (![parser matchRule:@"Action"]) return NO;
+    [parser performAction:@selector(yy_4_Prefix:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Suffix"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Effect"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L307:;
-    _index=index305; yythunkpos=yythunkpos306;
-    yyprintf((stderr, "  fail %s", "Prefix"));
-    return NO;
-}
+};
 
-- (BOOL) matchPrimary
-{
-    NSUInteger index324=_index, yythunkpos325=yythunkpos;
-    yyprintf((stderr, "%s", "Primary"));
-    NSUInteger index327=_index, yythunkpos328=yythunkpos;
-    if (![self matchIdentifier]) goto L330;
-    NSUInteger index333=_index, yythunkpos334=yythunkpos;
-    BOOL capturing336 = _capturing; _capturing=NO;
-    if ([self matchLEFTARROW]) goto L335;
-    _index=index333; yythunkpos=yythunkpos334;
-    _capturing = capturing336;
-    goto L337;
-L335:;
-    _capturing = capturing336;
-    goto L330;
-L337:;
-    [self yyDo:@selector(yy_1_Primary:)];
-    goto L329;
-L330:;
-    _index=index327; yythunkpos=yythunkpos328;
-    if (![self matchOPEN]) goto L338;
-    if (![self matchExpression]) goto L338;
-    if (![self matchCLOSE]) goto L338;
-    goto L329;
-L338:;
-    _index=index327; yythunkpos=yythunkpos328;
-    if (![self matchLiteral]) goto L341;
-    [self yyDo:@selector(yy_2_Primary:)];
-    goto L329;
-L341:;
-    _index=index327; yythunkpos=yythunkpos328;
-    if (![self matchClass]) goto L344;
-    [self yyDo:@selector(yy_3_Primary:)];
-    goto L329;
-L344:;
-    _index=index327; yythunkpos=yythunkpos328;
-    if (![self matchDOT]) goto L326;
-    [self yyDo:@selector(yy_4_Primary:)];
-    goto L329;
-L329:;
-    yyprintf((stderr, "  ok   %s", "Primary"));
+static PEGParserRule __Primary = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Identifier"]) return NO;
+    if (![parser lookAhead:^(PEGParser *parser){
+    if ([parser matchRule:@"LEFTARROW"]) return NO;
+    return YES;    }]) return NO;
+    [parser performAction:@selector(yy_1_Primary:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"OPEN"]) return NO;
+    if (![parser matchRule:@"Expression"]) return NO;
+    if (![parser matchRule:@"CLOSE"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Literal"]) return NO;
+    [parser performAction:@selector(yy_2_Primary:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Class"]) return NO;
+    [parser performAction:@selector(yy_3_Primary:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"DOT"]) return NO;
+    [parser performAction:@selector(yy_4_Primary:)];
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L326:;
-    _index=index324; yythunkpos=yythunkpos325;
-    yyprintf((stderr, "  fail %s", "Primary"));
-    return NO;
-}
+};
 
-- (BOOL) matchPropIdentifier
-{
-    NSUInteger index349=_index, yythunkpos350=yythunkpos;
-    yyprintf((stderr, "%s", "PropIdentifier"));
-    if (_capturing) yybegin = _index;
-    if (![self matchIdentStart]) goto L351;
-    NSUInteger index354, yythunkpos355;
-L356:;
-    index354=_index; yythunkpos355=yythunkpos;
-    if (![self matchIdentCont]) goto L357;
-    goto L356;
-L357:;
-    _index=index354; yythunkpos=yythunkpos355;
-    if (_capturing) yyend = _index;
-    NSUInteger index358, yythunkpos359;
-L360:;
-    index358=_index; yythunkpos359=yythunkpos;
-    if (![self matchHorizSpace]) goto L361;
-    goto L360;
-L361:;
-    _index=index358; yythunkpos=yythunkpos359;
-    yyprintf((stderr, "  ok   %s", "PropIdentifier"));
+static PEGParserRule __PropIdentifier = ^(PEGParser *parser){
+    [parser beginCapture];
+    if (![parser matchRule:@"IdentStart"]) return NO;
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"IdentCont"]) return NO;
+    return YES;    }];
+    [parser endCapture];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"HorizSpace"]) return NO;
+    return YES;    }];
     return YES;
-L351:;
-    _index=index349; yythunkpos=yythunkpos350;
-    yyprintf((stderr, "  fail %s", "PropIdentifier"));
-    return NO;
-}
+};
 
-- (BOOL) matchPropParamaters
-{
-    NSUInteger index362=_index, yythunkpos363=yythunkpos;
-    yyprintf((stderr, "%s", "PropParamaters"));
-    if (_capturing) yybegin = _index;
-    if (![self _matchString:"("]) goto L364;
-    if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\375\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto L364;
-    NSUInteger index367, yythunkpos368;
-L369:;
-    index367=_index; yythunkpos368=yythunkpos;
-    if (![self _matchClass:(unsigned char *)"\377\377\377\377\377\375\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) goto L370;
-    goto L369;
-L370:;
-    _index=index367; yythunkpos=yythunkpos368;
-    if (![self _matchString:")"]) goto L364;
-    if (_capturing) yyend = _index;
-    if (![self matchHorizSpace]) goto L364;
-    NSUInteger index371, yythunkpos372;
-L373:;
-    index371=_index; yythunkpos372=yythunkpos;
-    if (![self matchHorizSpace]) goto L374;
-    goto L373;
-L374:;
-    _index=index371; yythunkpos=yythunkpos372;
-    yyprintf((stderr, "  ok   %s", "PropParamaters"));
+static PEGParserRule __PropParamaters = ^(PEGParser *parser){
+    [parser beginCapture];
+    if (![parser matchString:"("]) return NO;
+    if (![parser matchMany:^(PEGParser *parser){
+    if (![parser matchClass:(unsigned char *)"\377\377\377\377\377\375\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"]) return NO;
+    return YES;    }]) return NO;
+    if (![parser matchString:")"]) return NO;
+    [parser endCapture];
+    if (![parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"HorizSpace"]) return NO;
+    return YES;    }]) return NO;
     return YES;
-L364:;
-    _index=index362; yythunkpos=yythunkpos363;
-    yyprintf((stderr, "  fail %s", "PropParamaters"));
-    return NO;
-}
+};
 
-- (BOOL) matchQUESTION
-{
-    NSUInteger index375=_index, yythunkpos376=yythunkpos;
-    yyprintf((stderr, "%s", "QUESTION"));
-    if (![self _matchString:"?"]) goto L377;
-    if (![self matchSpacing]) goto L377;
-    yyprintf((stderr, "  ok   %s", "QUESTION"));
+static PEGParserRule __QUESTION = ^(PEGParser *parser){
+    if (![parser matchString:"?"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L377:;
-    _index=index375; yythunkpos=yythunkpos376;
-    yyprintf((stderr, "  fail %s", "QUESTION"));
-    return NO;
-}
+};
 
-- (BOOL) matchRange
-{
-    NSUInteger index380=_index, yythunkpos381=yythunkpos;
-    yyprintf((stderr, "%s", "Range"));
-    NSUInteger index383=_index, yythunkpos384=yythunkpos;
-    if (![self matchChar]) goto L386;
-    if (![self _matchString:"-"]) goto L386;
-    if (![self matchChar]) goto L386;
-    goto L385;
-L386:;
-    _index=index383; yythunkpos=yythunkpos384;
-    if (![self matchChar]) goto L382;
-    goto L385;
-L385:;
-    yyprintf((stderr, "  ok   %s", "Range"));
+static PEGParserRule __Range = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Char"]) return NO;
+    if (![parser matchString:"-"]) return NO;
+    if (![parser matchRule:@"Char"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Char"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L382:;
-    _index=index380; yythunkpos=yythunkpos381;
-    yyprintf((stderr, "  fail %s", "Range"));
-    return NO;
-}
+};
 
-- (BOOL) matchSLASH
-{
-    NSUInteger index389=_index, yythunkpos390=yythunkpos;
-    yyprintf((stderr, "%s", "SLASH"));
-    if (![self _matchString:"/"]) goto L391;
-    if (![self matchSpacing]) goto L391;
-    yyprintf((stderr, "  ok   %s", "SLASH"));
+static PEGParserRule __SLASH = ^(PEGParser *parser){
+    if (![parser matchString:"/"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L391:;
-    _index=index389; yythunkpos=yythunkpos390;
-    yyprintf((stderr, "  fail %s", "SLASH"));
-    return NO;
-}
+};
 
-- (BOOL) matchSTAR
-{
-    NSUInteger index394=_index, yythunkpos395=yythunkpos;
-    yyprintf((stderr, "%s", "STAR"));
-    if (![self _matchString:"*"]) goto L396;
-    if (![self matchSpacing]) goto L396;
-    yyprintf((stderr, "  ok   %s", "STAR"));
+static PEGParserRule __STAR = ^(PEGParser *parser){
+    if (![parser matchString:"*"]) return NO;
+    if (![parser matchRule:@"Spacing"]) return NO;
     return YES;
-L396:;
-    _index=index394; yythunkpos=yythunkpos395;
-    yyprintf((stderr, "  fail %s", "STAR"));
-    return NO;
-}
+};
 
-- (BOOL) matchSequence
-{
-    NSUInteger index399=_index, yythunkpos400=yythunkpos;
-    yyprintf((stderr, "%s", "Sequence"));
-    NSUInteger index404=_index, yythunkpos405=yythunkpos;
-    if (![self matchPrefix]) goto L406;
-    goto L407;
-L406:;
-    _index=index404; yythunkpos=yythunkpos405;
-L407:;
-    NSUInteger index408, yythunkpos409;
-L410:;
-    index408=_index; yythunkpos409=yythunkpos;
-    if (![self matchPrefix]) goto L411;
-    [self yyDo:@selector(yy_1_Sequence:)];
-    goto L410;
-L411:;
-    _index=index408; yythunkpos=yythunkpos409;
-    yyprintf((stderr, "  ok   %s", "Sequence"));
+static PEGParserRule __Sequence = ^(PEGParser *parser){
+    [parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Prefix"]) return NO;
+    return YES;    }];
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchRule:@"Prefix"]) return NO;
+    [parser performAction:@selector(yy_1_Sequence:)];
+    return YES;    }];
     return YES;
-L401:;
-    _index=index399; yythunkpos=yythunkpos400;
-    yyprintf((stderr, "  fail %s", "Sequence"));
-    return NO;
-}
+};
 
-- (BOOL) matchSpace
-{
-    NSUInteger index414=_index, yythunkpos415=yythunkpos;
-    yyprintf((stderr, "%s", "Space"));
-    NSUInteger index417=_index, yythunkpos418=yythunkpos;
-    if (![self _matchString:" "]) goto L420;
-    goto L419;
-L420:;
-    _index=index417; yythunkpos=yythunkpos418;
-    if (![self _matchString:"\t"]) goto L421;
-    goto L419;
-L421:;
-    _index=index417; yythunkpos=yythunkpos418;
-    if (![self matchEndOfLine]) goto L416;
-    goto L419;
-L419:;
-    yyprintf((stderr, "  ok   %s", "Space"));
+static PEGParserRule __Space = ^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:" "]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchString:"\t"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"EndOfLine"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
     return YES;
-L416:;
-    _index=index414; yythunkpos=yythunkpos415;
-    yyprintf((stderr, "  fail %s", "Space"));
-    return NO;
-}
+};
 
-- (BOOL) matchSpacing
-{
-    NSUInteger index422=_index, yythunkpos423=yythunkpos;
-    yyprintf((stderr, "%s", "Spacing"));
-    NSUInteger index425, yythunkpos426;
-L427:;
-    index425=_index; yythunkpos426=yythunkpos;
-    NSUInteger index429=_index, yythunkpos430=yythunkpos;
-    if (![self matchSpace]) goto L432;
-    goto L431;
-L432:;
-    _index=index429; yythunkpos=yythunkpos430;
-    if (![self matchComment]) goto L428;
-    goto L431;
-L431:;
-    goto L427;
-L428:;
-    _index=index425; yythunkpos=yythunkpos426;
-    yyprintf((stderr, "  ok   %s", "Spacing"));
+static PEGParserRule __Spacing = ^(PEGParser *parser){
+    [parser matchMany:^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Space"]) return NO;
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"Comment"]) return NO;
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
+    return YES;    }];
     return YES;
-L424:;
-    _index=index422; yythunkpos=yythunkpos423;
-    yyprintf((stderr, "  fail %s", "Spacing"));
-    return NO;
-}
+};
 
-- (BOOL) matchSuffix
-{
-    NSUInteger index433=_index, yythunkpos434=yythunkpos;
-    yyprintf((stderr, "%s", "Suffix"));
-    if (![self matchPrimary]) goto L435;
-    NSUInteger index438=_index, yythunkpos439=yythunkpos;
-    NSUInteger index442=_index, yythunkpos443=yythunkpos;
-    if (![self matchQUESTION]) goto L445;
-    [self yyDo:@selector(yy_1_Suffix:)];
-    goto L444;
-L445:;
-    _index=index442; yythunkpos=yythunkpos443;
-    if (![self matchSTAR]) goto L448;
-    [self yyDo:@selector(yy_2_Suffix:)];
-    goto L444;
-L448:;
-    _index=index442; yythunkpos=yythunkpos443;
-    if (![self matchPLUS]) goto L440;
-    [self yyDo:@selector(yy_3_Suffix:)];
-    goto L444;
-L444:;
-    goto L441;
-L440:;
-    _index=index438; yythunkpos=yythunkpos439;
-L441:;
-    yyprintf((stderr, "  ok   %s", "Suffix"));
+static PEGParserRule __Suffix = ^(PEGParser *parser){
+    if (![parser matchRule:@"Primary"]) return NO;
+    [parser matchOne:^(PEGParser *parser){
+    if (![parser matchOne:^(PEGParser *parser){
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"QUESTION"]) return NO;
+    [parser performAction:@selector(yy_1_Suffix:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"STAR"]) return NO;
+    [parser performAction:@selector(yy_2_Suffix:)];
+    return YES;    }]) return YES;
+    if ([parser matchOne:^(PEGParser *parser){
+    if (![parser matchRule:@"PLUS"]) return NO;
+    [parser performAction:@selector(yy_3_Suffix:)];
+    return YES;    }]) return YES;
+    return NO;    }]) return NO;
+    return YES;    }];
     return YES;
-L435:;
-    _index=index433; yythunkpos=yythunkpos434;
-    yyprintf((stderr, "  fail %s", "Suffix"));
-    return NO;
-}
+};
 
-- (BOOL) yyparsefrom:(SEL)startRule
+
+- (BOOL) _parse
 {
-    BOOL yyok;
     if (!yythunkslen)
     {
         yythunkslen= 32;
         yythunks= malloc(sizeof(yythunk) * yythunkslen);
-        yybegin= yyend= yythunkpos= 0;
+        yybegin= yyend= _yythunkpos= 0;
     }
     if (!_string)
     {
@@ -1356,27 +882,19 @@ L435:;
         _index = 0;
     }
     yybegin= yyend= _index;
-    yythunkpos= 0;
+    _yythunkpos= 0;
     _capturing = YES;
-
-    NSMethodSignature *sig = [[self class] instanceMethodSignatureForSelector:startRule];
-    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:sig];
-    [invocation setTarget:self];
-    [invocation setSelector:startRule];
-    [invocation invoke];
-    [invocation getReturnValue:&yyok];
-    if (yyok) [self yyDone];
+    
+    BOOL matched = [self matchRule:@"Grammar"];
+    
+    if (matched)
+        [self yyDone];
     [self yyCommit];
-
+    
     [_string release];
     _string = nil;
-
-    return yyok;
-}
-
-- (BOOL) yyparse
-{
-    return [self yyparsefrom:@selector(matchGrammar)];
+    
+    return matched;
 }
 
 
@@ -1385,11 +903,66 @@ L435:;
 #pragma mark NSObject Methods
 //==================================================================================================
 
+- (id) init
+{
+    self = [super init];
+    
+    if (self)
+    {
+        _rules = [NSMutableDictionary new];
+        [self addRule:__AND withName:@"AND"];
+        [self addRule:__Action withName:@"Action"];
+        [self addRule:__BEGIN withName:@"BEGIN"];
+        [self addRule:__CLOSE withName:@"CLOSE"];
+        [self addRule:__Char withName:@"Char"];
+        [self addRule:__Class withName:@"Class"];
+        [self addRule:__Code withName:@"Code"];
+        [self addRule:__Comment withName:@"Comment"];
+        [self addRule:__DOT withName:@"DOT"];
+        [self addRule:__Declaration withName:@"Declaration"];
+        [self addRule:__Definition withName:@"Definition"];
+        [self addRule:__END withName:@"END"];
+        [self addRule:__Effect withName:@"Effect"];
+        [self addRule:__EndOfDecl withName:@"EndOfDecl"];
+        [self addRule:__EndOfFile withName:@"EndOfFile"];
+        [self addRule:__EndOfLine withName:@"EndOfLine"];
+        [self addRule:__Expression withName:@"Expression"];
+        [self addRule:__Grammar withName:@"Grammar"];
+        [self addRule:__HorizSpace withName:@"HorizSpace"];
+        [self addRule:__IdentCont withName:@"IdentCont"];
+        [self addRule:__IdentStart withName:@"IdentStart"];
+        [self addRule:__Identifier withName:@"Identifier"];
+        [self addRule:__LEFTARROW withName:@"LEFTARROW"];
+        [self addRule:__Literal withName:@"Literal"];
+        [self addRule:__NOT withName:@"NOT"];
+        [self addRule:__OPEN withName:@"OPEN"];
+        [self addRule:__OPTION withName:@"OPTION"];
+        [self addRule:__PLUS withName:@"PLUS"];
+        [self addRule:__PROPERTY withName:@"PROPERTY"];
+        [self addRule:__Prefix withName:@"Prefix"];
+        [self addRule:__Primary withName:@"Primary"];
+        [self addRule:__PropIdentifier withName:@"PropIdentifier"];
+        [self addRule:__PropParamaters withName:@"PropParamaters"];
+        [self addRule:__QUESTION withName:@"QUESTION"];
+        [self addRule:__Range withName:@"Range"];
+        [self addRule:__SLASH withName:@"SLASH"];
+        [self addRule:__STAR withName:@"STAR"];
+        [self addRule:__Sequence withName:@"Sequence"];
+        [self addRule:__Space withName:@"Space"];
+        [self addRule:__Spacing withName:@"Spacing"];
+        [self addRule:__Suffix withName:@"Suffix"];
+    }
+    
+    return self;
+}
+
+
 - (void) dealloc
 {
     free(yythunks);
 
     [_string release];
+    [_rules release];
 
     [super dealloc];
 }
@@ -1400,10 +973,24 @@ L435:;
 #pragma mark Public Methods
 //==================================================================================================
 
+- (void) addRule:(PEGParserRule)rule withName:(NSString *)name
+{
+    NSMutableArray *rules = [_rules objectForKey:name];
+    if (!rules)
+    {
+        rules = [NSMutableArray new];
+        [_rules setObject:rules forKey:name];
+        [rules release];
+    }
+    
+    [rules addObject:rule];
+}
+
+
 - (BOOL) parse
 {
     NSAssert(_dataSource != nil, @"can't call -parse without specifying a data source");
-    return [self yyparse];
+    return [self _parse];
 }
 
 
@@ -1412,7 +999,7 @@ L435:;
     _string = [string copy];
     _limit  = [_string lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
     _index  = 0;
-    BOOL retval = [self yyparse];
+    BOOL retval = [self _parse];
     [_string release];
     _string = nil;
     return retval;

@@ -34,7 +34,7 @@
 
 - (NSString *) condition
 {
-    return [NSString stringWithFormat:@"[self %@]", self.rule.selectorName];
+    return [NSString stringWithFormat:@"[parser matchRule:@\"%@\"]", self.rule.name];
 }
 
 

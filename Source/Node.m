@@ -24,7 +24,7 @@
 }
 
 
-- (NSString *) compile:(NSString *)failLabel
+- (NSString *) compile:(NSString *)parserClassName
 {
     return nil;
 }

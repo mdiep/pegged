@@ -6,11 +6,12 @@
 
 
 @class Compiler;
+@class PEGParser;
 
 
 @protocol PEGParserDataSource;
 typedef NSObject<PEGParserDataSource> PEGParserDataSource;
-
+typedef BOOL (^PEGParserRule)(PEGParser *parser);
 typedef struct { int begin, end;  SEL action; } yythunk;
 
 @interface PEGParser : NSObject
@@ -19,19 +20,31 @@ typedef struct { int begin, end;  SEL action; } yythunk;
     NSString *_string;
     NSUInteger _index;
     NSUInteger _limit;
+    NSMutableDictionary *_rules;
 
     int	yybegin;
     int	yyend;
     BOOL _capturing;
     yythunk *yythunks;
     int	yythunkslen;
-    int yythunkpos;
+    int _yythunkpos;
 
     Compiler *_compiler;
 }
 
 @property (retain) PEGParserDataSource *dataSource;
 @property (retain) Compiler *compiler;
+
+- (void) addRule:(PEGParserRule)rule withName:(NSString *)name;
+
+- (void) beginCapture;
+- (void) endCapture;
+
+- (BOOL) lookAhead:(PEGParserRule)rule;
+- (BOOL) invert:(PEGParserRule)rule;
+- (BOOL) matchRule:(NSString *)ruleName;
+- (BOOL) matchOne:(PEGParserRule)rule;
+- (BOOL) matchMany:(PEGParserRule)rule;
 
 - (BOOL) parse;
 - (BOOL) parseString:(NSString *)string;
