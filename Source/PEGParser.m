@@ -32,6 +32,9 @@
 @implementation PEGParser
 
 @synthesize dataSource = _dataSource;
+
+@synthesize captureStart = yybegin;
+@synthesize captureEnd = yyend;
 @synthesize compiler = _compiler;
 
 //==================================================================================================

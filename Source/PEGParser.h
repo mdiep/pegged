@@ -23,14 +23,17 @@ typedef void (^PEGParserAction)(PEGParser *self, NSString *text);
     NSMutableDictionary *_rules;
 
     BOOL _capturing;
-    int	yybegin;
-    int	yyend;
+    NSUInteger yybegin;
+    NSUInteger yyend;
     NSMutableArray *_captures;
 
     Compiler *_compiler;
 }
 
 @property (retain) PEGParserDataSource *dataSource;
+
+@property (readonly) NSUInteger captureStart;
+@property (readonly) NSUInteger captureEnd;
 @property (retain) Compiler *compiler;
 
 - (void) addRule:(PEGParserRule)rule withName:(NSString *)name;

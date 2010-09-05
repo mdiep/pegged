@@ -414,14 +414,17 @@ typedef void (^%@Action)(%@ *self, NSString *text);\n\
     NSMutableDictionary *_rules;\n\
 \n\
     BOOL _capturing;\n\
-    int	yybegin;\n\
-    int	yyend;\n\
+    NSUInteger yybegin;\n\
+    NSUInteger yyend;\n\
     NSMutableArray *_captures;\n\
 \n\
 %@\
 }\n\
 \n\
 @property (retain) %@DataSource *dataSource;\n\
+\n\
+@property (readonly) NSUInteger captureStart;\n\
+@property (readonly) NSUInteger captureEnd;\n\
 %@\
 \n\
 - (void) addRule:(%@Rule)rule withName:(NSString *)name;\n\
@@ -488,6 +491,9 @@ const NSString *__sourceTemplate = @"\
 @implementation %@\n\
 \n\
 @synthesize dataSource = _dataSource;\n\
+\n\
+@synthesize captureStart = yybegin;\n\
+@synthesize captureEnd = yyend;\n\
 %@\
 \n\
 //==================================================================================================\n\
