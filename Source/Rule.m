@@ -66,12 +66,6 @@
 }
 
 
-- (NSString *) nextActionSelectorName
-{
-    return [NSString stringWithFormat:@"yy_%u_%@", ++_nextSelectorNumber, self.name];
-}
-
-
 //==================================================================================================
 #pragma mark -
 #pragma mark Public Properties

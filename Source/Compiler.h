@@ -14,7 +14,6 @@
 {
     NSMutableArray *_stack;
     NSMutableDictionary *_rules;
-    NSMutableArray *_actions;
     Rule *_startRule;
     Rule *_currentRule;
     

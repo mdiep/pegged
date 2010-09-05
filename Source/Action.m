@@ -8,12 +8,8 @@
 
 #import "Action.h"
 
-#import "Rule.h"
 
 @implementation Action
-
-@synthesize code = _code;
-@synthesize rule = _rule;
 
 //==================================================================================================
 #pragma mark -
@@ -22,9 +18,7 @@
 
 - (void) dealloc
 {
-    [_selectorName release];
     [_code release];
-    [_rule release];
     
     [super dealloc];
 }
@@ -37,8 +31,13 @@
 
 - (NSString *) compile:(NSString *)parserClassName
 {
-    return [NSString stringWithFormat:@"    [parser performAction:@selector(%@:)];\n",
-            self.selectorName];
+    NSMutableString *code = [NSMutableString string];
+    
+    [code appendFormat:@"    [parser performAction:^(%@ *self, NSString *text){", parserClassName];
+    [code appendString:_code];
+    [code appendString:@"    }];"];
+    
+    return code;
 }
 
 
@@ -63,19 +62,6 @@
     }
     
     return self;
-}
-
-
-//==================================================================================================
-#pragma mark -
-#pragma mark Public Methods
-//==================================================================================================
-
-- (NSString *) selectorName
-{
-    if (!_selectorName)
-        _selectorName = [[self.rule nextActionSelectorName] retain];
-    return _selectorName;
 }
 
 

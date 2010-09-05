@@ -16,8 +16,6 @@
     BOOL _used;
     
     Node *_definition;
-    
-    NSUInteger _nextSelectorNumber;
 }
 
 @property (copy) NSString *name;
@@ -30,6 +28,5 @@
 - (id) initWithName:(NSString*)name;
 
 - (NSString *) compile:(NSString *)parserClassName;
-- (NSString *) nextActionSelectorName;
 
 @end

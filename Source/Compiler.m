@@ -49,7 +49,6 @@ const NSString *__sourceTemplate;
     {
         _stack      = [NSMutableArray new];
         _rules      = [NSMutableDictionary new];
-        _actions    = [NSMutableArray new];
         _properties = [NSMutableArray new];
     }
     
@@ -61,7 +60,6 @@ const NSString *__sourceTemplate;
 {
     [_stack release];
     [_rules release];
-    [_actions release];
     [_properties release];
     
     [_className release];
@@ -107,7 +105,7 @@ const NSString *__sourceTemplate;
     }
     
     // Generate the header
-    NSString *header = [NSString stringWithFormat:(NSString *)__headerTemplate, PEGGED_VERSION_MAJOR, PEGGED_VERSION_MINOR, PEGGED_VERSION_CHANGE, classes, self.className, self.className, self.className, self.className, self.className, self.className, self.className, self.className, variables, self.className, properties, self.className, self.className, self.className, self.className, self.className, self.className];
+    NSString *header = [NSString stringWithFormat:(NSString *)__headerTemplate, PEGGED_VERSION_MAJOR, PEGGED_VERSION_MINOR, PEGGED_VERSION_CHANGE, classes, self.className, self.className, self.className, self.className, self.className, self.className, self.className, self.className, self.className, self.className, variables, self.className, properties, self.className, self.className, self.className, self.className, self.className, self.className, self.className];
     [header writeToFile:self.headerPath atomically:NO encoding:NSUTF8StringEncoding error:&error];
     
     // Generate the source
@@ -115,11 +113,6 @@ const NSString *__sourceTemplate;
     NSMutableString *definitions  = [NSMutableString new];
     if (self.caseInsensitive)
         [imports appendFormat:@"#define %@_CASE_INSENSITIVE\n", [self.className uppercaseString]];
-    for (Action *action in _actions)
-    {
-        [definitions appendFormat:@"- (void) %@:(NSString *)text\n{\n%@;\n}\n\n",
-         action.selectorName, action.code];
-    }
     for (NSString *name in [[_rules allKeys] sortedArrayUsingSelector:@selector(compare:)])
     {
         Rule *rule = [_rules objectForKey:name];
@@ -137,7 +130,7 @@ const NSString *__sourceTemplate;
         [definitions appendString:[rule compile:self.className]];
         [definitions appendFormat:@"};\n\n"];
     }
-    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PEGGED_VERSION_MAJOR, PEGGED_VERSION_MINOR, PEGGED_VERSION_CHANGE, self.className, imports, self.className, self.className, synthesizes, self.className, self.className, self.className, self.className, self.className, [self.className uppercaseString], definitions, _startRule.name, declarations, self.className];
+    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PEGGED_VERSION_MAJOR, PEGGED_VERSION_MINOR, PEGGED_VERSION_CHANGE, self.className, imports, self.className, self.className, self.className, self.className, self.className, self.className, synthesizes, self.className, self.className, self.className, self.className, self.className, [self.className uppercaseString], self.className, self.className, self.className, self.className, definitions, _startRule.name, declarations, self.className];
     [declarations release];
     [definitions release];
     [source writeToFile:self.sourcePath atomically:NO encoding:NSUTF8StringEncoding error:&error];
@@ -191,10 +184,7 @@ const NSString *__sourceTemplate;
 
 - (void) parsedAction:(NSString *)code
 {
-    Action *action = [Action actionWithCode:code];
-    action.rule = _currentRule;
-    [_stack   addObject:action];
-    [_actions addObject:action];
+    [_stack addObject:[Action actionWithCode:code]];
 }
 
 
@@ -413,7 +403,7 @@ const NSString *__headerTemplate = @"\
 @protocol %@DataSource;\n\
 typedef NSObject<%@DataSource> %@DataSource;\n\
 typedef BOOL (^%@Rule)(%@ *parser);\n\
-typedef struct { int begin, end;  SEL action; } yythunk;\n\
+typedef void (^%@Action)(%@ *self, NSString *text);\n\
 \n\
 @interface %@ : NSObject\n\
 {\n\
@@ -423,12 +413,10 @@ typedef struct { int begin, end;  SEL action; } yythunk;\n\
     NSUInteger _limit;\n\
     NSMutableDictionary *_rules;\n\
 \n\
+    BOOL _capturing;\n\
     int	yybegin;\n\
     int	yyend;\n\
-    BOOL _capturing;\n\
-    yythunk *yythunks;\n\
-    int	yythunkslen;\n\
-    int _yythunkpos;\n\
+    NSMutableArray *_captures;\n\
 \n\
 %@\
 }\n\
@@ -440,6 +428,7 @@ typedef struct { int begin, end;  SEL action; } yythunk;\n\
 \n\
 - (void) beginCapture;\n\
 - (void) endCapture;\n\
+- (void) performAction:(%@Action)action;\n\
 \n\
 - (BOOL) lookAhead:(%@Rule)rule;\n\
 - (BOOL) invert:(%@Rule)rule;\n\
@@ -469,6 +458,28 @@ const NSString *__sourceTemplate = @"\
 #import \"%@.h\"\n\
 \n\
 %@\
+\n\
+@interface %@Capture : NSObject\n\
+{\n\
+    NSUInteger _begin;\n\
+    NSUInteger _end;\n\
+    %@Action _action;\n\
+}\n\
+@property (assign) NSUInteger begin;\n\
+@property (assign) NSUInteger end;\n\
+@property (copy) %@Action action;\n\
+@end\n\
+\n\
+@implementation %@Capture\n\
+@synthesize begin = _begin;\n\
+@synthesize end = _end;\n\
+@synthesize action = _action;\n\
+- (void) dealloc\n\
+{\n\
+    [_action release];\n\
+    [super dealloc];\n\
+}\n\
+@end\n\
 \n\
 @interface %@ ()\n\
 \n\
@@ -537,12 +548,12 @@ const NSString *__sourceTemplate = @"\
 \n\
 - (BOOL) lookAhead:(%@Rule)rule\n\
 {\n\
-    NSUInteger index=_index, yythunkpos=_yythunkpos;\n\
+    NSUInteger index=_index;\n\
     BOOL capturing = _capturing;\n\
     _capturing = NO;\n\
     BOOL matched = rule(self);\n\
     _capturing = capturing;\n\
-    _index=index, _yythunkpos=yythunkpos;\n\
+    _index=index;\n\
     return matched;\n\
 }\n\
 \n\
@@ -557,10 +568,15 @@ const NSString *__sourceTemplate = @"\
 \n\
 - (BOOL) matchOne:(%@Rule)rule\n\
 {\n\
-    NSUInteger index=_index, yythunkpos=_yythunkpos;\n\
+    NSUInteger index=_index, captureCount=[_captures count];\n\
     if (rule(self))\n\
         return YES;\n\
-    _index=index, _yythunkpos=yythunkpos;\n\
+    _index=index;\n\
+    if ([_captures count] > captureCount)\n\
+    {\n\
+        NSRange rangeToRemove = NSMakeRange(captureCount, ([_captures count]-1)-captureCount);\n\
+        [_captures removeObjectsInRange:rangeToRemove];\n\
+    }\n\
     return NO;\n\
 }\n\
 \n\
@@ -626,17 +642,14 @@ const NSString *__sourceTemplate = @"\
     return NO;\n\
 }\n\
 \n\
-- (void) performAction:(SEL)action\n\
+- (void) performAction:(%@Action)action\n\
 {\n\
-    while (_yythunkpos >= yythunkslen)\n\
-    {\n\
-        yythunkslen *= 2;\n\
-        yythunks= realloc(yythunks, sizeof(yythunk) * yythunkslen);\n\
-    }\n\
-    yythunks[_yythunkpos].begin=  yybegin;\n\
-    yythunks[_yythunkpos].end=    yyend;\n\
-    yythunks[_yythunkpos].action= action;\n\
-    ++_yythunkpos;\n\
+    %@Capture *capture = [%@Capture new];\n\
+    capture.begin  = yybegin;\n\
+    capture.end    = yyend;\n\
+    capture.action = action;\n\
+    [_captures addObject:capture];\n\
+    [capture release];\n\
 }\n\
 \n\
 - (NSString *) yyText:(int)begin to:(int)end\n\
@@ -649,15 +662,10 @@ const NSString *__sourceTemplate = @"\
 \n\
 - (void) yyDone\n\
 {\n\
-    int pos;\n\
-    for (pos= 0;  pos < _yythunkpos;  ++pos)\n\
+    for (%@Capture *capture in _captures)\n\
     {\n\
-        yythunk *thunk= &yythunks[pos];\n\
-        NSString *text = [self yyText:thunk->begin to:thunk->end];\n\
-        yyprintf((stderr, \"DO [%%d] %%s %%s\\n\", pos, [NSStringFromSelector(thunk->action) UTF8String], [text UTF8String]));\n\
-        [self performSelector:thunk->action withObject:text];\n\
+        capture.action(self, [self yyText:capture.begin to:capture.end]);\n\
     }\n\
-    _yythunkpos= 0;\n\
 }\n\
 \n\
 - (void) yyCommit\n\
@@ -670,19 +678,13 @@ const NSString *__sourceTemplate = @"\
 \n\
     yybegin -= _index;\n\
     yyend -= _index;\n\
-    _yythunkpos= 0;\n\
+    [_captures removeAllObjects];\n\
 }\n\
 \n\
 %@\
 \n\
 - (BOOL) _parse\n\
 {\n\
-    if (!yythunkslen)\n\
-    {\n\
-        yythunkslen= 32;\n\
-        yythunks= malloc(sizeof(yythunk) * yythunkslen);\n\
-        yybegin= yyend= _yythunkpos= 0;\n\
-    }\n\
     if (!_string)\n\
     {\n\
         _string = [NSString new];\n\
@@ -690,7 +692,6 @@ const NSString *__sourceTemplate = @"\
         _index = 0;\n\
     }\n\
     yybegin= yyend= _index;\n\
-    _yythunkpos= 0;\n\
     _capturing = YES;\n\
     \n\
     BOOL matched = [self matchRule:@\"%@\"];\n\
@@ -718,6 +719,7 @@ const NSString *__sourceTemplate = @"\
     if (self)\n\
     {\n\
         _rules = [NSMutableDictionary new];\n\
+        _captures = [NSMutableArray new];\n\
 %@\
     }\n\
     \n\
@@ -727,10 +729,9 @@ const NSString *__sourceTemplate = @"\
 \n\
 - (void) dealloc\n\
 {\n\
-    free(yythunks);\n\
-\n\
     [_string release];\n\
     [_rules release];\n\
+    [_captures release];\n\
 \n\
     [super dealloc];\n\
 }\n\

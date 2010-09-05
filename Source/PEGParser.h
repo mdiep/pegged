@@ -12,7 +12,7 @@
 @protocol PEGParserDataSource;
 typedef NSObject<PEGParserDataSource> PEGParserDataSource;
 typedef BOOL (^PEGParserRule)(PEGParser *parser);
-typedef struct { int begin, end;  SEL action; } yythunk;
+typedef void (^PEGParserAction)(PEGParser *self, NSString *text);
 
 @interface PEGParser : NSObject
 {
@@ -22,12 +22,10 @@ typedef struct { int begin, end;  SEL action; } yythunk;
     NSUInteger _limit;
     NSMutableDictionary *_rules;
 
+    BOOL _capturing;
     int	yybegin;
     int	yyend;
-    BOOL _capturing;
-    yythunk *yythunks;
-    int	yythunkslen;
-    int _yythunkpos;
+    NSMutableArray *_captures;
 
     Compiler *_compiler;
 }
@@ -39,6 +37,7 @@ typedef struct { int begin, end;  SEL action; } yythunk;
 
 - (void) beginCapture;
 - (void) endCapture;
+- (void) performAction:(PEGParserAction)action;
 
 - (BOOL) lookAhead:(PEGParserRule)rule;
 - (BOOL) invert:(PEGParserRule)rule;

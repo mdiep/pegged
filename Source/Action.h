@@ -14,14 +14,8 @@
 
 @interface Action : Node
 {
-    NSString *_selectorName;
     NSString *_code;
-    Rule *_rule;
 }
-
-@property (readonly) NSString *selectorName;
-@property (copy) NSString *code;
-@property (retain) Rule *rule;
 
 + (id) actionWithCode:(NSString *)code;
 - (id) initWithCode:(NSString *)code;

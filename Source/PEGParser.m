@@ -6,6 +6,28 @@
 
 #import "Compiler.h"
 
+@interface PEGParserCapture : NSObject
+{
+    NSUInteger _begin;
+    NSUInteger _end;
+    PEGParserAction _action;
+}
+@property (assign) NSUInteger begin;
+@property (assign) NSUInteger end;
+@property (copy) PEGParserAction action;
+@end
+
+@implementation PEGParserCapture
+@synthesize begin = _begin;
+@synthesize end = _end;
+@synthesize action = _action;
+- (void) dealloc
+{
+    [_action release];
+    [super dealloc];
+}
+@end
+
 @interface PEGParser ()
 
 - (BOOL) matchDot;
@@ -73,12 +95,12 @@
 
 - (BOOL) lookAhead:(PEGParserRule)rule
 {
-    NSUInteger index=_index, yythunkpos=_yythunkpos;
+    NSUInteger index=_index;
     BOOL capturing = _capturing;
     _capturing = NO;
     BOOL matched = rule(self);
     _capturing = capturing;
-    _index=index, _yythunkpos=yythunkpos;
+    _index=index;
     return matched;
 }
 
@@ -93,10 +115,15 @@
 
 - (BOOL) matchOne:(PEGParserRule)rule
 {
-    NSUInteger index=_index, yythunkpos=_yythunkpos;
+    NSUInteger index=_index, captureCount=[_captures count];
     if (rule(self))
         return YES;
-    _index=index, _yythunkpos=yythunkpos;
+    _index=index;
+    if ([_captures count] > captureCount)
+    {
+        NSRange rangeToRemove = NSMakeRange(captureCount, ([_captures count]-1)-captureCount);
+        [_captures removeObjectsInRange:rangeToRemove];
+    }
     return NO;
 }
 
@@ -162,17 +189,14 @@
     return NO;
 }
 
-- (void) performAction:(SEL)action
+- (void) performAction:(PEGParserAction)action
 {
-    while (_yythunkpos >= yythunkslen)
-    {
-        yythunkslen *= 2;
-        yythunks= realloc(yythunks, sizeof(yythunk) * yythunkslen);
-    }
-    yythunks[_yythunkpos].begin=  yybegin;
-    yythunks[_yythunkpos].end=    yyend;
-    yythunks[_yythunkpos].action= action;
-    ++_yythunkpos;
+    PEGParserCapture *capture = [PEGParserCapture new];
+    capture.begin  = yybegin;
+    capture.end    = yyend;
+    capture.action = action;
+    [_captures addObject:capture];
+    [capture release];
 }
 
 - (NSString *) yyText:(int)begin to:(int)end
@@ -185,15 +209,10 @@
 
 - (void) yyDone
 {
-    int pos;
-    for (pos= 0;  pos < _yythunkpos;  ++pos)
+    for (PEGParserCapture *capture in _captures)
     {
-        yythunk *thunk= &yythunks[pos];
-        NSString *text = [self yyText:thunk->begin to:thunk->end];
-        yyprintf((stderr, "DO [%d] %s %s\n", pos, [NSStringFromSelector(thunk->action) UTF8String], [text UTF8String]));
-        [self performSelector:thunk->action withObject:text];
+        capture.action(self, [self yyText:capture.begin to:capture.end]);
     }
-    _yythunkpos= 0;
 }
 
 - (void) yyCommit
@@ -206,127 +225,7 @@
 
     yybegin -= _index;
     yyend -= _index;
-    _yythunkpos= 0;
-}
-
-- (void) yy_1_Declaration:(NSString *)text
-{
- self.compiler.caseInsensitive = YES; ;
-}
-
-- (void) yy_2_Declaration:(NSString *)text
-{
- [self.compiler parsedPropertyParameters:text]; ;
-}
-
-- (void) yy_3_Declaration:(NSString *)text
-{
- [self.compiler parsedPropertyType:text]; ;
-}
-
-- (void) yy_4_Declaration:(NSString *)text
-{
- [self.compiler parsedPropertyStars:text]; ;
-}
-
-- (void) yy_5_Declaration:(NSString *)text
-{
- [self.compiler parsedPropertyName:text]; ;
-}
-
-- (void) yy_1_Definition:(NSString *)text
-{
- [self.compiler startRule:text]; ;
-}
-
-- (void) yy_2_Definition:(NSString *)text
-{
- [self.compiler parsedRule]; ;
-}
-
-- (void) yy_1_Expression:(NSString *)text
-{
- [self.compiler parsedAlternate]; ;
-}
-
-- (void) yy_1_Sequence:(NSString *)text
-{
- [self.compiler append]; ;
-}
-
-- (void) yy_1_Prefix:(NSString *)text
-{
- [self.compiler parsedLookAhead]; ;
-}
-
-- (void) yy_2_Prefix:(NSString *)text
-{
- [self.compiler parsedNegativeLookAhead]; ;
-}
-
-- (void) yy_3_Prefix:(NSString *)text
-{
- [self.compiler parsedLookAhead:text]; ;
-}
-
-- (void) yy_4_Prefix:(NSString *)text
-{
- [self.compiler parsedNegativeLookAhead:text]; ;
-}
-
-- (void) yy_1_Suffix:(NSString *)text
-{
- [self.compiler parsedQuestion]; ;
-}
-
-- (void) yy_2_Suffix:(NSString *)text
-{
- [self.compiler parsedStar]; ;
-}
-
-- (void) yy_3_Suffix:(NSString *)text
-{
- [self.compiler parsedPlus]; ;
-}
-
-- (void) yy_1_Primary:(NSString *)text
-{
- [self.compiler parsedIdentifier:text]; ;
-}
-
-- (void) yy_2_Primary:(NSString *)text
-{
- [self.compiler parsedLiteral:text]; ;
-}
-
-- (void) yy_3_Primary:(NSString *)text
-{
- [self.compiler parsedClass:text]; ;
-}
-
-- (void) yy_4_Primary:(NSString *)text
-{
- [self.compiler parsedDot]; ;
-}
-
-- (void) yy_1_Effect:(NSString *)text
-{
- [self.compiler parsedCode:text]; ;
-}
-
-- (void) yy_2_Effect:(NSString *)text
-{
- [self.compiler parsedAction:text]; ;
-}
-
-- (void) yy_3_Effect:(NSString *)text
-{
- [self.compiler beginCapture]; ;
-}
-
-- (void) yy_4_Effect:(NSString *)text
-{
- [self.compiler endCapture]; ;
+    [_captures removeAllObjects];
 }
 
 static PEGParserRule __AND = ^(PEGParser *parser){
@@ -447,17 +346,14 @@ static PEGParserRule __Declaration = ^(PEGParser *parser){
     if (![parser matchRule:@"HorizSpace"]) return NO;
     return YES;    }];
     if (![parser matchRule:@"EndOfDecl"]) return NO;
-    [parser performAction:@selector(yy_1_Declaration:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ self.compiler.caseInsensitive = YES;     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"PROPERTY"]) return NO;
     [parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"PropParamaters"]) return NO;
-    [parser performAction:@selector(yy_2_Declaration:)];
-    return YES;    }];
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedPropertyParameters:text];     }];    return YES;    }];
     if (![parser matchRule:@"PropIdentifier"]) return NO;
-    [parser performAction:@selector(yy_3_Declaration:)];
-    [parser beginCapture];
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedPropertyType:text];     }];    [parser beginCapture];
     [parser matchMany:^(PEGParser *parser){
     if (![parser matchString:"*"]) return NO;
     return YES;    }];
@@ -465,22 +361,18 @@ static PEGParserRule __Declaration = ^(PEGParser *parser){
     [parser matchMany:^(PEGParser *parser){
     if (![parser matchRule:@"HorizSpace"]) return NO;
     return YES;    }];
-    [parser performAction:@selector(yy_4_Declaration:)];
-    if (![parser matchRule:@"PropIdentifier"]) return NO;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedPropertyStars:text];     }];    if (![parser matchRule:@"PropIdentifier"]) return NO;
     if (![parser matchRule:@"EndOfDecl"]) return NO;
-    [parser performAction:@selector(yy_5_Declaration:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedPropertyName:text];     }];    return YES;    }]) return YES;
     return NO;    }]) return NO;
     return YES;
 };
 
 static PEGParserRule __Definition = ^(PEGParser *parser){
     if (![parser matchRule:@"Identifier"]) return NO;
-    [parser performAction:@selector(yy_1_Definition:)];
-    if (![parser matchRule:@"LEFTARROW"]) return NO;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler startRule:text];     }];    if (![parser matchRule:@"LEFTARROW"]) return NO;
     if (![parser matchRule:@"Expression"]) return NO;
-    [parser performAction:@selector(yy_2_Definition:)];
-    return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedRule];     }];    return YES;
 };
 
 static PEGParserRule __END = ^(PEGParser *parser){
@@ -493,20 +385,16 @@ static PEGParserRule __Effect = ^(PEGParser *parser){
     if (![parser matchOne:^(PEGParser *parser){
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"Code"]) return NO;
-    [parser performAction:@selector(yy_1_Effect:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedCode:text];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"Action"]) return NO;
-    [parser performAction:@selector(yy_2_Effect:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedAction:text];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"BEGIN"]) return NO;
-    [parser performAction:@selector(yy_3_Effect:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler beginCapture];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"END"]) return NO;
-    [parser performAction:@selector(yy_4_Effect:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler endCapture];     }];    return YES;    }]) return YES;
     return NO;    }]) return NO;
     return YES;
 };
@@ -554,8 +442,7 @@ static PEGParserRule __Expression = ^(PEGParser *parser){
     [parser matchMany:^(PEGParser *parser){
     if (![parser matchRule:@"SLASH"]) return NO;
     if (![parser matchRule:@"Sequence"]) return NO;
-    [parser performAction:@selector(yy_1_Expression:)];
-    return YES;    }];
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedAlternate];     }];    return YES;    }];
     return YES;
 };
 
@@ -689,23 +576,19 @@ static PEGParserRule __Prefix = ^(PEGParser *parser){
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"AND"]) return NO;
     if (![parser matchRule:@"Suffix"]) return NO;
-    [parser performAction:@selector(yy_1_Prefix:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedLookAhead];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"NOT"]) return NO;
     if (![parser matchRule:@"Suffix"]) return NO;
-    [parser performAction:@selector(yy_2_Prefix:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedNegativeLookAhead];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"AND"]) return NO;
     if (![parser matchRule:@"Action"]) return NO;
-    [parser performAction:@selector(yy_3_Prefix:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedLookAhead:text];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"NOT"]) return NO;
     if (![parser matchRule:@"Action"]) return NO;
-    [parser performAction:@selector(yy_4_Prefix:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedNegativeLookAhead:text];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"Suffix"]) return NO;
     return YES;    }]) return YES;
@@ -723,8 +606,7 @@ static PEGParserRule __Primary = ^(PEGParser *parser){
     if (![parser lookAhead:^(PEGParser *parser){
     if ([parser matchRule:@"LEFTARROW"]) return NO;
     return YES;    }]) return NO;
-    [parser performAction:@selector(yy_1_Primary:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedIdentifier:text];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"OPEN"]) return NO;
     if (![parser matchRule:@"Expression"]) return NO;
@@ -732,16 +614,13 @@ static PEGParserRule __Primary = ^(PEGParser *parser){
     return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"Literal"]) return NO;
-    [parser performAction:@selector(yy_2_Primary:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedLiteral:text];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"Class"]) return NO;
-    [parser performAction:@selector(yy_3_Primary:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedClass:text];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"DOT"]) return NO;
-    [parser performAction:@selector(yy_4_Primary:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedDot];     }];    return YES;    }]) return YES;
     return NO;    }]) return NO;
     return YES;
 };
@@ -811,8 +690,7 @@ static PEGParserRule __Sequence = ^(PEGParser *parser){
     return YES;    }];
     [parser matchMany:^(PEGParser *parser){
     if (![parser matchRule:@"Prefix"]) return NO;
-    [parser performAction:@selector(yy_1_Sequence:)];
-    return YES;    }];
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler append];     }];    return YES;    }];
     return YES;
 };
 
@@ -851,16 +729,13 @@ static PEGParserRule __Suffix = ^(PEGParser *parser){
     if (![parser matchOne:^(PEGParser *parser){
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"QUESTION"]) return NO;
-    [parser performAction:@selector(yy_1_Suffix:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedQuestion];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"STAR"]) return NO;
-    [parser performAction:@selector(yy_2_Suffix:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedStar];     }];    return YES;    }]) return YES;
     if ([parser matchOne:^(PEGParser *parser){
     if (![parser matchRule:@"PLUS"]) return NO;
-    [parser performAction:@selector(yy_3_Suffix:)];
-    return YES;    }]) return YES;
+    [parser performAction:^(PEGParser *self, NSString *text){ [self.compiler parsedPlus];     }];    return YES;    }]) return YES;
     return NO;    }]) return NO;
     return YES;    }];
     return YES;
@@ -869,12 +744,6 @@ static PEGParserRule __Suffix = ^(PEGParser *parser){
 
 - (BOOL) _parse
 {
-    if (!yythunkslen)
-    {
-        yythunkslen= 32;
-        yythunks= malloc(sizeof(yythunk) * yythunkslen);
-        yybegin= yyend= _yythunkpos= 0;
-    }
     if (!_string)
     {
         _string = [NSString new];
@@ -882,7 +751,6 @@ static PEGParserRule __Suffix = ^(PEGParser *parser){
         _index = 0;
     }
     yybegin= yyend= _index;
-    _yythunkpos= 0;
     _capturing = YES;
     
     BOOL matched = [self matchRule:@"Grammar"];
@@ -910,6 +778,7 @@ static PEGParserRule __Suffix = ^(PEGParser *parser){
     if (self)
     {
         _rules = [NSMutableDictionary new];
+        _captures = [NSMutableArray new];
         [self addRule:__AND withName:@"AND"];
         [self addRule:__Action withName:@"Action"];
         [self addRule:__BEGIN withName:@"BEGIN"];
@@ -959,10 +828,9 @@ static PEGParserRule __Suffix = ^(PEGParser *parser){
 
 - (void) dealloc
 {
-    free(yythunks);
-
     [_string release];
     [_rules release];
+    [_captures release];
 
     [super dealloc];
 }
