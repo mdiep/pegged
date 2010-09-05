@@ -114,7 +114,7 @@
     _index=index;
     if ([_captures count] > captureCount)
     {
-        NSRange rangeToRemove = NSMakeRange(captureCount, ([_captures count]-1)-captureCount);
+        NSRange rangeToRemove = NSMakeRange(captureCount, [_captures count]-captureCount);
         [_captures removeObjectsInRange:rangeToRemove];
     }
     return NO;

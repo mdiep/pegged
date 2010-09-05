@@ -570,7 +570,7 @@ const NSString *__sourceTemplate = @"\
     _index=index;\n\
     if ([_captures count] > captureCount)\n\
     {\n\
-        NSRange rangeToRemove = NSMakeRange(captureCount, ([_captures count]-1)-captureCount);\n\
+        NSRange rangeToRemove = NSMakeRange(captureCount, [_captures count]-captureCount);\n\
         [_captures removeObjectsInRange:rangeToRemove];\n\
     }\n\
     return NO;\n\
