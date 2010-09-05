@@ -59,6 +59,7 @@
     
     if (self.inverted)
     {
+        [code appendString:@"    return YES;"];
         [code appendString:@"    }];\n"];
     }
     
