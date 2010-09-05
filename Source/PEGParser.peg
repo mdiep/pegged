@@ -1,0 +1,92 @@
+
+# Grammar for PEGs, based on the one presented in Ford's paper [1]. Modifications based on those 
+# included in Ian Piumarta's peg/leg parser generator [2].
+# 
+# [1] Bryan Ford.  "Parsing Expression Grammars: A Recognition-Based Syntactic
+#     Foundation."  Symposium on Principles of Programming Languages,
+#     January 14--16, 2004, Venice, Italy.
+# 
+# [2] http://piumarta.com/software/peg/
+# 
+
+@property (retain) Compiler *compiler;
+
+# Hierarchical syntax
+Grammar <- Spacing Declaration* Spacing Definition+ EndOfFile
+
+Declaration <- OPTION "case-insensitive" HorizSpace* EndOfDecl { self.compiler.caseInsensitive = YES; }
+             / PROPERTY (PropParamaters { [self.compiler parsedPropertyParameters:text]; })?
+                        PropIdentifier           { [self.compiler parsedPropertyType:text]; }
+                        < '*'* > HorizSpace*     { [self.compiler parsedPropertyStars:text]; }
+                        PropIdentifier EndOfDecl { [self.compiler parsedPropertyName:text]; }
+
+Definition <- Identifier { [self.compiler startRule:text]; }
+                LEFTARROW Expression { [self.compiler parsedRule]; }
+
+Expression <- Sequence (SLASH Sequence { [self.compiler parsedAlternate]; })*
+Sequence   <- Prefix? (Prefix { [self.compiler append]; })*
+Prefix     <- AND Suffix { [self.compiler parsedLookAhead]; }
+            / NOT Suffix { [self.compiler parsedNegativeLookAhead]; }
+            / AND Action { [self.compiler parsedLookAhead:text]; }
+            / NOT Action { [self.compiler parsedNegativeLookAhead:text]; }
+            /     Suffix
+            /     Effect
+Suffix     <- Primary ( QUESTION    { [self.compiler parsedQuestion]; }
+                      / STAR        { [self.compiler parsedStar]; }
+                      / PLUS        { [self.compiler parsedPlus]; }
+                      )?
+Primary    <- Identifier !LEFTARROW { [self.compiler parsedIdentifier:text]; }
+            / OPEN Expression CLOSE
+            / Literal   { [self.compiler parsedLiteral:text]; }
+            / Class     { [self.compiler parsedClass:text]; }
+            / DOT       { [self.compiler parsedDot]; }
+
+Effect     <- Code      { [self.compiler parsedCode:text]; }
+            / Action    { [self.compiler parsedAction:text]; }
+            / BEGIN     { [self.compiler beginCapture]; }
+            / END       { [self.compiler endCapture]; }
+
+# Lexical syntax
+Identifier <- < IdentStart IdentCont* > Spacing
+IdentStart <- [a-zA-Z_]
+IdentCont  <- IdentStart / [0-9]
+
+Literal    <- ['] < (!['] Char)*  > ['] Spacing
+            / ["] < (!["] Char)*  > ["] Spacing
+Class      <- '[' < (!']' Range)* > ']' Spacing
+Range      <- Char '-' Char / Char
+Char       <- '\\' [nrt'"\[\]\\]
+            / '\\' [0-2][0-7][0-7]
+            / '\\' [0-7][0-7]?
+            / '\\x' [0-9a-fA-F][0-9a-fA-F]
+            / !'\\' .
+
+LEFTARROW  <- '<-' Spacing
+SLASH      <- '/' Spacing
+AND        <- '&' Spacing
+NOT        <- '!' Spacing
+QUESTION   <- '?' Spacing
+STAR       <- '*' Spacing
+PLUS       <- '+' Spacing
+OPEN       <- '(' Spacing
+CLOSE      <- ')' Spacing
+DOT        <- '.' Spacing
+
+Spacing    <- (Space / Comment)*
+Comment    <- '#' (!EndOfLine .)* EndOfLine
+Space      <- ' ' / '\t' / EndOfLine
+EndOfLine  <- '\r\n' / '\n' / '\r'
+EndOfFile  <- !.
+
+OPTION     <- '@option' HorizSpace+
+PROPERTY   <- '@property' HorizSpace+
+BEGIN      <- '<' Spacing
+END        <- '>' Spacing
+
+Code       <- '{{' < [^}]* > '}}' Spacing
+Action     <- '{' < [^}]* > '}' Spacing
+HorizSpace <- ' ' / '\t'
+
+PropIdentifier <- < IdentStart IdentCont* > HorizSpace*
+PropParamaters <- < '(' [^)]+ ')' > HorizSpace+
+EndOfDecl  <- ';' HorizSpace* (EndOfLine / Comment) 

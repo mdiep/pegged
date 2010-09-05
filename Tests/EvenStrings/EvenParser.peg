@@ -1,0 +1,3 @@
+
+String <-  < 'a'+ !(<'b'>) !'b' >  &{ (parser.captureEnd-parser.captureStart)%2 == 0 }  !.
+        /  < 'b'+ >  !{ (parser.captureEnd-parser.captureStart)%2 == 1 }  !.

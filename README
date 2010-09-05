@@ -1,5 +1,0 @@
-
-preggers is a tool for generating Objective-C recursive-decent parsers from Parsing Expression Grammars (PEGs).
-
-This code, along with the code it generates, is in the public domain.
-
