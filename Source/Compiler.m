@@ -130,7 +130,7 @@ const NSString *__sourceTemplate;
         [definitions appendString:[rule compile:self.className]];
         [definitions appendFormat:@"};\n\n"];
     }
-    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PEGGED_VERSION_MAJOR, PEGGED_VERSION_MINOR, PEGGED_VERSION_CHANGE, self.className, imports, self.className, self.className, self.className, self.className, self.className, self.className, synthesizes, self.className, self.className, self.className, self.className, self.className, [self.className uppercaseString], self.className, self.className, self.className, self.className, definitions, _startRule.name, declarations, self.className];
+    NSString *source = [NSString stringWithFormat:(NSString *)__sourceTemplate, PEGGED_VERSION_MAJOR, PEGGED_VERSION_MINOR, PEGGED_VERSION_CHANGE, self.className, imports, self.className, self.className, self.className, self.className, self.className, synthesizes, self.className, self.className, self.className, self.className, self.className, [self.className uppercaseString], self.className, self.className, self.className, self.className, definitions, _startRule.name, declarations, self.className];
     [declarations release];
     [definitions release];
     [source writeToFile:self.sourcePath atomically:NO encoding:NSUTF8StringEncoding error:&error];
@@ -435,6 +435,9 @@ typedef void (^%@Action)(%@ *self, NSString *text);\n\
 - (BOOL) matchRule:(NSString *)ruleName;\n\
 - (BOOL) matchOne:(%@Rule)rule;\n\
 - (BOOL) matchMany:(%@Rule)rule;\n\
+- (BOOL) matchDot;\n\
+- (BOOL) matchString:(char *)s;\n\
+- (BOOL) matchClass:(unsigned char *)bits;\n\
 \n\
 - (BOOL) parse;\n\
 - (BOOL) parseString:(NSString *)string;\n\
@@ -479,13 +482,6 @@ const NSString *__sourceTemplate = @"\
     [_action release];\n\
     [super dealloc];\n\
 }\n\
-@end\n\
-\n\
-@interface %@ ()\n\
-\n\
-- (BOOL) matchDot;\n\
-- (BOOL) matchString:(char *)s;\n\
-- (BOOL) matchClass:(unsigned char *)bits;\n\
 @end\n\
 \n\
 \n\

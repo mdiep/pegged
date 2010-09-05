@@ -44,6 +44,9 @@ typedef void (^PEGParserAction)(PEGParser *self, NSString *text);
 - (BOOL) matchRule:(NSString *)ruleName;
 - (BOOL) matchOne:(PEGParserRule)rule;
 - (BOOL) matchMany:(PEGParserRule)rule;
+- (BOOL) matchDot;
+- (BOOL) matchString:(char *)s;
+- (BOOL) matchClass:(unsigned char *)bits;
 
 - (BOOL) parse;
 - (BOOL) parseString:(NSString *)string;

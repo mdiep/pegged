@@ -28,13 +28,6 @@
 }
 @end
 
-@interface PEGParser ()
-
-- (BOOL) matchDot;
-- (BOOL) matchString:(char *)s;
-- (BOOL) matchClass:(unsigned char *)bits;
-@end
-
 
 @implementation PEGParser
 
