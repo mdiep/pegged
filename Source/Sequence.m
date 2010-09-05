@@ -51,7 +51,7 @@
     
     if (self.inverted)
     {
-        [code appendFormat:@"    [parser invert:^(%@ *parser){\n"];
+        [code appendFormat:@"    [parser invert:^(%@ *parser){\n", parserClassName];
     }
     
     for (Node *node in self.nodes)
