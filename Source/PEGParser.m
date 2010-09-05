@@ -146,6 +146,7 @@
 
 - (BOOL) matchString:(char *)s
 {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 #ifndef PEGPARSER_CASE_INSENSITIVE
     const char *cstring = [_string UTF8String];
 #else
@@ -157,13 +158,15 @@
         if (_index >= _limit && ![self _refill]) return NO;
         if (cstring[_index] != *s)
         {
+            [pool drain];
             _index = saved;
-    yyprintf((stderr, "  fail matchString"));
+            yyprintf((stderr, "  fail matchString"));
             return NO;
         }
         ++s;
         ++_index;
     }
+    [pool drain];
     yyprintf((stderr, "  ok   matchString"));
     return YES;
 }

@@ -602,6 +602,7 @@ const NSString *__sourceTemplate = @"\
 \n\
 - (BOOL) matchString:(char *)s\n\
 {\n\
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];\n\
 #ifndef %@_CASE_INSENSITIVE\n\
     const char *cstring = [_string UTF8String];\n\
 #else\n\
@@ -613,13 +614,15 @@ const NSString *__sourceTemplate = @"\
         if (_index >= _limit && ![self _refill]) return NO;\n\
         if (cstring[_index] != *s)\n\
         {\n\
+            [pool drain];\n\
             _index = saved;\n\
-    yyprintf((stderr, \"  fail matchString\"));\n\
+            yyprintf((stderr, \"  fail matchString\"));\n\
             return NO;\n\
         }\n\
         ++s;\n\
         ++_index;\n\
     }\n\
+    [pool drain];\n\
     yyprintf((stderr, \"  ok   matchString\"));\n\
     return YES;\n\
 }\n\
